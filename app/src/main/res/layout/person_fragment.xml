@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="@color/black"
+                android:id="@+id/person_info">
+
+                <cn.droidlover.xdroid.demo.ui.CircleImageView
+                    android:id="@+id/portrait"
+                    android:layout_centerInParent="true"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="30dp" />
+
+                <TextView
+                    android:text="ID:295156"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/userId"
+                    android:textColor="@color/white"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginTop="3dp" />
+
+                <TextView
+                    android:text="未设置昵称"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/userName"
+                    android:textColor="@color/light_white"
+                    android:gravity="center"
+                    android:textSize="14sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="3dp">
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/charge"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/invitation"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/account"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/play_history"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/enshrine"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/message"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp">
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+                <cn.droidlover.xdroid.demo.ui.PersonItem
+                    android:id="@+id/setting"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    >
+                </cn.droidlover.xdroid.demo.ui.PersonItem>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

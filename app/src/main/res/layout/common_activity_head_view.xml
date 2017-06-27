@@ -1,0 +1,38 @@
+<LinearLayout android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@mipmap/back_black"
+            android:id="@+id/back_image"
+            android:background="#00000000"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_gravity="left" />
+
+        <TextView
+            android:text="编辑资料"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/activity_head_title"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:layout_weight="0.80"
+            android:textAlignment="center"
+            android:textColor="@color/black" />
+    </FrameLayout>
+
+    <View
+        android:id = "@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="@color/border_clo" />
+</LinearLayout>

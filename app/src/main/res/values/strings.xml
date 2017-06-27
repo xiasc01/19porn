@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">XDroid</string>
+    <string name="empty" translatable="false"></string>
+    <string name="time_0" translatable="false">00:00</string>
+</resources>

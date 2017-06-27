@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#cc4444</color>
+    <color name="colorPrimaryDark">#aa2222</color>
+    <color name="colorAccent">#ffffffff</color>
+    <color name="homeTable">#ffffffff</color>
+
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#87000000</color>
+    <color name="text_disabled">#38000000</color>
+
+    <color name="light_white">#ffffff</color>
+    <color name="black">#000000</color>
+    <color name="red">#f00</color>
+    <color name="pale_red">#bb3333</color>
+
+    <color name="border_clo2">#ddd</color>
+    <color name="border_clo">#ccc</color>
+    <color name="text_clo">#333</color>
+    <color name="white">#ffffff</color>
+    <color name="blue">#419de4</color>
+    <color name="gray">#aaaaaa</color>
+</resources>

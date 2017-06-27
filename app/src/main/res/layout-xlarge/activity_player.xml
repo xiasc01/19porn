@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="false" >
+    <SurfaceView
+        android:id="@+id/player_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>
+<RelativeLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:id="@+id/tip_info_overlay"
+        android:layout_width="139dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:visibility="invisible" >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="13dp"
+            android:background="#bf000000"
+            android:gravity="center" >
+            <ImageView
+	            android:id="@+id/tip_info_icon"
+	            android:layout_marginTop="10dp"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:src="@mipmap/ic_volume_tip" />
+	        <TextView
+	            android:id="@+id/tip_info_text"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:textColor="#ffffff"
+	            android:textSize="14sp"
+	            android:text="" />
+        </LinearLayout>
+        <RelativeLayout
+            android:id="@+id/tip_info_progress"
+            android:layout_width="match_parent"
+            android:layout_height="15dp"
+            android:background="#bf000000"
+            android:visibility="invisible" >
+            <ImageView
+                android:id="@+id/tip_info_progress_background"
+                android:layout_width="115dp"
+                android:layout_height="3dp"
+                android:layout_centerHorizontal="true"
+                android:background="#ffffff"
+                android:paddingBottom="12dp"
+                />
+            <ImageView
+                android:id="@+id/tip_info_progress_fill"
+                android:layout_alignLeft="@id/tip_info_progress_background"
+                android:layout_width="30dp"
+                android:layout_height="3dp"
+                android:background="#32aafe"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+            android:id="@+id/player_overlay_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:paddingBottom="10dp"
+            android:layout_gravity="top"
+            android:background="#BF000000"
+            android:visibility="invisible" >
+        	<ImageButton
+			        android:id="@+id/go_back"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_marginLeft="16dp"
+			        android:layout_marginTop="10dp"
+			        android:layout_marginRight="13dp"
+			        android:background="#00ffffff"
+			        android:clickable="true"
+			        android:scaleType="fitXY"
+			        android:src="@drawable/ic_goback" />
+            <TextView
+                android:id="@+id/player_overlay_title"
+                android:layout_width="wrap_content"
+	        	android:layout_height="wrap_content"
+	        	android:layout_toRightOf="@id/go_back"
+	        	android:layout_toLeftOf="@+id/playhistory_button"
+	        	android:layout_alignTop="@id/go_back"
+	        	android:layout_alignBottom="@id/go_back"
+	        	android:singleLine="true"
+	        	android:ellipsize="end"
+	        	android:gravity="left|center"
+	        	android:textColor="#ffffff"
+	        	android:textSize="18sp"
+	        	android:text="" />
+
+            <TextView
+                android:id="@+id/subtitle_entry_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="字"
+                android:layout_alignParentRight="true"
+                android:layout_alignTop="@id/go_back"
+	        	android:layout_alignBottom="@id/go_back"
+				android:layout_marginRight="60dp"
+				android:layout_marginLeft="16dp"
+	        	android:background="#00ffffff"
+                android:textColor="#ffffffff"
+                />
+            <ImageButton
+                android:id="@id/playhistory_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignTop="@id/go_back"
+	        	android:layout_alignBottom="@id/go_back"
+				android:layout_marginRight="16dp"
+				android:layout_marginLeft="16dp"
+	        	android:background="#00ffffff"
+	        	android:scaleType="fitXY"
+                android:src="@drawable/ic_history"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/player_overlay_footer"
+        android:layout_width="match_parent"
+        android:layout_height="270dp"
+        android:layout_alignParentBottom="true"
+        android:background="#bf000000"
+        android:visibility="invisible" >
+
+        <SeekBar
+            android:id="@+id/player_overlay_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:maxHeight="3dp"
+            android:minHeight="3dp"
+            android:progressDrawable="@drawable/seekbar_progress"
+            android:thumb="@drawable/seekbar_thumb" />
+
+        <RelativeLayout
+            android:layout_below="@id/player_overlay_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="12dp" >
+
+	        <RelativeLayout
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignTop="@+id/play_controls"
+	            android:layout_alignBottom="@id/play_controls"
+	            android:layout_marginLeft="10dp"
+	            android:gravity="center" >
+
+	            <TextView
+	                android:id="@+id/player_overlay_time"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_alignParentLeft="true"
+	                android:gravity="center"
+	                android:text="@string/time_0"
+	                android:textColor="#ffffff"
+	                android:textSize="16sp" />
+
+	            <ImageView
+	                android:id="@+id/time_seperator"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_alignBottom="@id/player_overlay_time"
+	                android:layout_alignTop="@id/player_overlay_time"
+	                android:layout_marginLeft="3dp"
+	                android:layout_marginRight="3dp"
+	                android:layout_toRightOf="@id/player_overlay_time"
+	                android:gravity="center"
+	                android:src="@mipmap/ic_time_seperator" >
+	            </ImageView>
+
+	            <TextView
+	                android:id="@+id/player_overlay_duration"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_alignBottom="@id/player_overlay_time"
+	                android:layout_alignTop="@id/player_overlay_time"
+	                android:layout_toRightOf="@id/time_seperator"
+	                android:gravity="center"
+	                android:text="@string/time_0"
+	                android:textColor="#666666"
+	                android:textSize="16sp" />
+	        </RelativeLayout>
+
+	        <LinearLayout
+	            android:id="@id/play_controls"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerHorizontal="true"
+	            android:gravity="center" >
+
+	            <ImageButton
+	                android:id="@+id/play_prev"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:background="#00ffffff"
+	                android:src="@drawable/ic_playprev" />
+
+	            <ImageButton
+	                android:id="@+id/play_pause"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_marginLeft="33dp"
+	                android:layout_marginRight="33dp"
+	                android:background="#00ffffff"
+	                android:src="@drawable/ic_play" />
+
+	            <ImageButton
+	                android:id="@+id/play_next"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:background="#00ffffff"
+	                android:src="@drawable/ic_playnext" />
+	        </LinearLayout>
+
+	        <RelativeLayout
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignTop="@+id/play_controls"
+	            android:layout_alignBottom="@id/play_controls"
+	            android:layout_alignParentRight="true"
+	            android:gravity="center" >
+
+	            <TextView
+                android:id="@+id/hwdecode_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="40dp"
+                android:text="硬解"
+	        	android:background="#00ffffff"
+                android:textColor="#ffffffff"
+                android:visibility="invisible"
+                />
+
+	        </RelativeLayout>
+
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/play_history_overlay"
+        android:layout_width="275dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:visibility="invisible" >
+    <ListView
+        android:id="@+id/play_history_listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#bf000000"
+        android:divider="@null"/>
+    </RelativeLayout>
+
+</RelativeLayout>
+</RelativeLayout>
