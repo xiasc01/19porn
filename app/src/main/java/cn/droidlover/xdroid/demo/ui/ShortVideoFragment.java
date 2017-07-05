@@ -7,6 +7,7 @@ import android.view.View;
 import com.zhy.http.okhttp.OkHttpUtils;
 
 import java.util.HashMap;
+import java.util.List;
 
 import butterknife.BindView;
 import cn.droidlover.qtcontentlayout.QTContentLayout;
@@ -41,6 +42,7 @@ public class ShortVideoFragment extends XFragment{
 
     private int mType = 0;
     private boolean mIsInit = false;
+    private int maxId  = 0;
 
     private JsonCallback<MovieInfo>  mCallback =   new JsonCallback<MovieInfo>() {
         @Override
@@ -52,7 +54,21 @@ public class ShortVideoFragment extends XFragment{
         public void onResponse(MovieInfo response, int id) {
            // if (!response.isError()) {
                // Log.i(App.TAG,"lzmlsfe getVideos is success");
-                getAdapter().addData(response.getResults());
+            List<MovieInfo.Item> movies = response.getResults();
+
+            for(int i = 0;i < movies.size();i++){
+                getAdapter().addElement(0,movies.get(i));
+            }
+
+            if(movies.size() > 0){
+                getAdapter().notifyItemRangeInserted(0, movies.size());
+            }
+
+            getAdapter().notifyDataSetChanged();
+
+            if(movies.size() > 0){
+                maxId = Integer.parseInt(movies.get(movies.size() - 1).getId());
+            }
 
                // contentLayout.getRecyclerView().setPage(2, MAX_PAGE);
 
@@ -71,6 +87,7 @@ public class ShortVideoFragment extends XFragment{
             mIsInit = true;
             initAdapter();
             VideoManager.getInstance().getVideos(mType,-1,mCallback);
+            VideoManager.getInstance().getVideos(mType,maxId,mCallback);
         }
     }
 
@@ -82,12 +99,12 @@ public class ShortVideoFragment extends XFragment{
         recyclerView.setOnRefreshAndLoadMoreListener(new XRecyclerView.OnRefreshAndLoadMoreListener() {
             @Override
             public void onRefresh() {
-                VideoManager.getInstance().getVideos(mType,10,mCallback);
+                VideoManager.getInstance().getVideos(mType,maxId,mCallback);
             }
 
             @Override
             public void onLoadMore(int page) {
-                VideoManager.getInstance().getVideos(mType,10,mCallback);
+                VideoManager.getInstance().getVideos(mType,maxId,mCallback);
             }
         });
 

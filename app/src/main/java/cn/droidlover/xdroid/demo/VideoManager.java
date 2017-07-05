@@ -39,13 +39,14 @@ public class VideoManager {
         mUser      = User.getInstance();
     };
 
-    public void getVideos(final int videoType, int num, final JsonCallback<MovieInfo> callback){
-        if(num == -1){
-            if(!getVideosFromLocal(videoType,callback)){
+    public void getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
+        if(id == -1){
+            /*if(!getVideosFromLocal(videoType,callback)){
                 getVideosFromServer(videoType,10,callback);
-            };
+            }*/
+            getVideosFromLocal(videoType,callback);
         }else {
-            getVideosFromServer(videoType,num,callback);
+            getVideosFromServer(videoType,id,callback);
         }
     }
 
@@ -102,14 +103,14 @@ public class VideoManager {
         return movies.size() > 0;
     }
 
-    private void getVideosFromServer(final int videoType, final int num, final JsonCallback<MovieInfo> callback){
+    private void getVideosFromServer(final int videoType, final int id_index, final JsonCallback<MovieInfo> callback){
         final JsonCallback<MovieInfo>  localCallback =  new JsonCallback<MovieInfo>() {
             @Override
             public void onFail(Call call, Exception e, int id) {
                 if(e instanceof SocketTimeoutException && mReConnectNum < 5){
                     mReConnectNum++;
                     AppKit.updateServerUrl();
-                    getVideosFromServer(videoType,num,callback);
+                    getVideosFromServer(videoType,id_index,callback);
                 }else {
                     callback.onFail(call,e,id);
                     mReConnectNum = 0;
@@ -134,6 +135,7 @@ public class VideoManager {
         params.put("user_id",User.getInstance().getUserId());
         params.put("signature", User.getInstance().getSignature());
         params.put("video_type","" + videoType);
+        params.put("id_index","" + id_index);
 
         NetApi.invokeGet(params,localCallback);
     }
@@ -164,7 +166,7 @@ public class VideoManager {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS video_info" +
-                    "(movie_id VARCHAR PRIMARY KEY, title VARCHAR, type VARCHAR,duration VARCHAR, value VARCHAR,thumb_key VARCHAR)");
+                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR, type VARCHAR,duration VARCHAR, value VARCHAR,thumb_key VARCHAR)");
         }
 
         //如果DATABASE_VERSION值被改为2,系统发现现有数据库版本不同,即会调用onUpgrade
@@ -190,7 +192,7 @@ public class VideoManager {
                 for (MovieInfo.Item movie : movies) {
                     Cursor c = queryMovie(movie.getMovie_id());
                     if(c.getCount() == 0){
-                        db.execSQL("INSERT INTO video_info VALUES(?, ?, ?, ?, ?, ?)", new Object[]{movie.getMovie_id(), movie.getTitle(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getThumb_key()});
+                        db.execSQL("INSERT INTO video_info VALUES(?,?, ?, ?, ?, ?, ?)", new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getThumb_key()});
                         results.add(movie);
                     }
                 }
@@ -210,6 +212,7 @@ public class VideoManager {
             Cursor c = queryTheCursor(videoType);
             while (c.moveToNext()) {
                 MovieInfo.Item movie = new MovieInfo.Item();
+                movie.setId(c.getInt(c.getColumnIndex("id")) + "");
                 movie.setMovie_id(c.getString(c.getColumnIndex("movie_id")));
                 movie.setTitle(c.getString(c.getColumnIndex("title")));
                 movie.setDuration(c.getString(c.getColumnIndex("duration")));
@@ -226,7 +229,7 @@ public class VideoManager {
         }
 
         private Cursor queryTheCursor(String videoType) {
-            Cursor c = db.rawQuery("SELECT * FROM video_info where type = ?", new String[]{videoType});
+            Cursor c = db.rawQuery("SELECT * FROM video_info where type = ? order by id", new String[]{videoType});
             return c;
         }
 

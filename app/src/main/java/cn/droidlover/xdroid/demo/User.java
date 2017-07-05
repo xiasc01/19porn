@@ -211,12 +211,17 @@ public class User {
     }
 
     public  String getSignature(){
-        if(mUserId == null || mPassword == null){
+        if(mUserId == null){
             return null;
         }
 
+        String password = mPassword;
+        if(mPassword == null){
+            password = "";
+        }
+
         String time = AppKit.getCurrentTime();
-        String signature = LoginMagic1 + time + LoginMagic2 + mUserId + LoginMagic3 + mPassword;
+        String signature = LoginMagic1 + time + LoginMagic2 + mUserId + LoginMagic3 + password;
         signature = AppKit.stringToMD5(signature);
         return signature;
     }

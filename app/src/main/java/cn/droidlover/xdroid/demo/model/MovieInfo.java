@@ -20,6 +20,7 @@ public class MovieInfo extends BaseModel {
     }
 
     public static class Item{
+        private String id;
         private String movie_id;
         private String title;
         private String duration;
@@ -153,6 +154,14 @@ public class MovieInfo extends BaseModel {
 
         public void setHasPlay(Boolean hasPlay) {
             this.hasPlay = hasPlay;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
         }
     }
 }
