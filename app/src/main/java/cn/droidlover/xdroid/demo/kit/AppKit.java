@@ -34,7 +34,7 @@ import okio.Buffer;
 
 public class AppKit {
 
-    private static String serverUrl = "http://www.3ysd.net/19porn.php";
+    private static String serverUrl = "http://www.3ysd.net";
 
     public static void copyToClipBoard(Context context, String text) {
         ClipboardManager cm = (ClipboardManager) context.getSystemService(
@@ -148,7 +148,7 @@ public class AppKit {
     }
 
     public static boolean updateServerUrl(){
-        serverUrl = "http://www.3ysd.net/19porn.php";
+        serverUrl = "http://www.3ysd.net";
         return true;
     }
 

@@ -4,6 +4,7 @@ package cn.droidlover.xdroid.demo.ui;
  * Created by Administrator on 2017/5/7 0007.
  */
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -80,5 +81,13 @@ public class MainActivity2 extends XActivity {
     @Override
     public int getLayoutId() {
         return R.layout.activity_main2;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 1){
+            ((PersonFragment)personFragment).setPortrait();
+        }
     }
 }

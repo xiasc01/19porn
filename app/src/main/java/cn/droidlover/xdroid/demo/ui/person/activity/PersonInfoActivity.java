@@ -3,23 +3,35 @@ package cn.droidlover.xdroid.demo.ui.person.activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.net.URL;
+
+import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
+import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 
 public class PersonInfoActivity extends AppCompatActivity implements View.OnClickListener{
+    private static int RESULT_LOAD_IMAGE = 1;
+
+
     PersonItem mUserId;
     PersonItem mUserName;
     PersonItem mPortrait;
@@ -101,9 +113,29 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
                     Intent.ACTION_PICK,
                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         }
-        startActivityForResult(intent, 0);
+        startActivityForResult(intent, RESULT_LOAD_IMAGE);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();
+            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+            Cursor cursor = getContentResolver().query(selectedImage,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String picturePath = cursor.getString(columnIndex);
+            cursor.close();
+
+            Bitmap bitmap = User.getInstance().setUserPortrait(BitmapFactory.decodeFile(picturePath));
+            if(bitmap != null){
+                mPortrait.setItemValueImage(bitmap);
+            }
+
+        }
+    }
 
     private void setPortrait(){
         Thread thread = new Thread(new Runnable() {

@@ -3,6 +3,7 @@ package cn.droidlover.xdroid.demo;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -11,6 +12,7 @@ import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
@@ -175,6 +177,30 @@ public class User {
 
     }
 
+    public Bitmap setUserPortrait(Bitmap bitmap) {
+        float width = bitmap.getWidth();
+        float height = bitmap.getHeight();
+
+        Matrix matrix = new Matrix();
+        float scaleWidth = ((float) 200) / width;
+        matrix.postScale(scaleWidth, scaleWidth);
+
+        Bitmap dstBitmap = Bitmap.createBitmap(bitmap, 0, 0, (int) width,
+                (int) width, matrix, true);
+
+
+        String thumbCacheDir   = Environment.getExternalStorageDirectory() + "/droid/thumb/portrait.thumb";
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = new FileOutputStream(thumbCacheDir);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        dstBitmap.compress(Bitmap.CompressFormat.JPEG,85,fileOutputStream);
+
+        return  dstBitmap;
+    }
+
     public Bitmap getUserPortrait() throws Exception {
         File file = null;
         String thumbCacheDir   = Environment.getExternalStorageDirectory() + "/droid/thumb/";
@@ -193,7 +219,9 @@ public class User {
             FileInputStream fileInputStream = new FileInputStream(thumbPathName);
             bitmap = BitmapFactory.decodeStream(fileInputStream);
         }else{
-            bitmap = BitmapFactory.decodeStream(AppKit.getHttpStream("http://123.56.65.245/test.jpg"));
+            String server = AppKit.getServerUrl();
+            String Url    = server + "/test.jpg";
+            bitmap = BitmapFactory.decodeStream(AppKit.getHttpStream(Url));
             if(bitmap != null){
                 file = new File(thumbPathName);
                 if(!file.exists()){

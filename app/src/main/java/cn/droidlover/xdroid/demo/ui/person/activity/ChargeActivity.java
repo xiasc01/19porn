@@ -21,6 +21,7 @@ import java.util.List;
 import butterknife.BindView;
 import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.ui.CommonActivityHeadView;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
@@ -64,7 +65,7 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
         mHeadView.setTitle("充值");
 
         final Context chargeActivity = (Context)this;
-        String url = "http://123.56.65.245/19porn.php";
+        String url = AppKit.getServerUrl();
         JsonCallback<Charge> callback = new JsonCallback<Charge>(1 * 60 * 60 * 1000) {
             @Override
             public void onFail(Call call, Exception e, int id) {

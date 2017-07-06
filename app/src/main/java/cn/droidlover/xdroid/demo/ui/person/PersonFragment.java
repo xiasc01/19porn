@@ -119,7 +119,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         mPersonInfo.setOnClickListener(this);
     }
 
-    private void setPortrait(){
+    public void setPortrait(){
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -166,7 +166,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         }
 
         if(intent != null){
-            context.startActivity(intent);
+            context.startActivityForResult(intent,1);
         }
 
     }
