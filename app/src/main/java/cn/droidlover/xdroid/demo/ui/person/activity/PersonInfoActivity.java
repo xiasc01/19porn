@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -158,10 +159,10 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void modifyUserName(){
-        final EditText editText = new EditText(this);
         AlertDialog.Builder inputDialog =  new AlertDialog.Builder(this);
-
-        inputDialog.setTitle("修改用户昵称").setView(editText);
+        final View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_modify_username,null);
+        final EditText editText = (EditText)dialogView.findViewById(R.id.edit_username);
+        inputDialog.setTitle("修改用户昵称").setView(dialogView);
 
         inputDialog.setPositiveButton("确定",
                 new DialogInterface.OnClickListener() {
@@ -184,6 +185,7 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
                 });
 
         inputDialog.show();
+        editText.clearFocus();
     }
 
     private void modifyPassword(){

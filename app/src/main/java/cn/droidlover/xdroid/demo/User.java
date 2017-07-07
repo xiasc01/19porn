@@ -71,8 +71,10 @@ public class User {
 
         mUserId     = getCacheUserId();
         mPassword   = getCacheUserPassword();
-        if(mUserId == null || mPassword == null){
+        if(mUserId == null){
             register();
+        }else{
+            login();
         }
         return true;
     }
@@ -84,7 +86,51 @@ public class User {
         return  true;
     }
 
+    public void login(){
+        String signature = getSignature();
 
+        final User user = this;
+        JsonCallback<User> callback = new JsonCallback<User>() {
+            @Override
+            public void onFail(Call call, Exception e, int id) {
+                e.printStackTrace();
+
+                boolean isSocketTimeoutException = e instanceof SocketTimeoutException;
+                if(isSocketTimeoutException){
+                    mReConnect++;
+
+                    if(mReConnect < 5){
+                        AppKit.updateServerUrl();
+                        login();
+                    }else {
+                    }
+                }else {
+                    //mUserId    = null;
+                    //mPassword  = null;
+                }
+            }
+
+            @Override
+            public void onResponse(User response, int id) {
+                if(!user.mStatus.equals("ok")){
+                    mUserId    = null;
+                    mPassword  = null;
+                    return;
+                }
+
+                user.mUserName  = response.mUserName;
+            }
+        };
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","user_login");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+
+        NetApi.invokeGet(params,callback);
+
+        return;
+    }
 
     public boolean manualLogin(final String userId, final String password, final LoginCallback loginCallback){
         String passwordHash = LoginMagic1 + password + LoginMagic2;
@@ -303,6 +349,7 @@ public class User {
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit();
                 editor.putString("mUserId",user.mUserId);
                 editor.putString("mPassword",user.mPassword);
+                editor.putString("mUserName",user.mUserName);
                 editor.commit();
 
                 mReConnectNum = 0;

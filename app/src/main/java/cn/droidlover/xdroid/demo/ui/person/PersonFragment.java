@@ -43,6 +43,12 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
     @BindView(R.id.person_info)
     View mPersonInfo;
 
+    @BindView(R.id.userId)
+    TextView mUserId;
+
+    @BindView(R.id.userName)
+    TextView mUserName;
+
     @BindView(R.id.charge)
     PersonItem mCharge;
 
@@ -64,14 +70,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
     @BindView(R.id.setting)
     PersonItem mSetting;
 
-    @BindView(R.id.userId)
-    TextView mUserId;
-
-    @BindView(R.id.userName)
-    TextView mUserName;
-
     Bitmap pngBM = null;
-
     Object lock = new Object();
 
     private Handler handler = new Handler() {
@@ -115,6 +114,9 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         mSetting.setLineVisible(View.INVISIBLE);
 
         setPortrait();
+
+        mUserName.setText(User.getInstance().getUserName());
+        mUserId.setText(User.getInstance().getUserId());
 
         mPersonInfo.setOnClickListener(this);
     }
