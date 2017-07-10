@@ -113,12 +113,15 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         mSetting.setOnClickListener(this);
         mSetting.setLineVisible(View.INVISIBLE);
 
+        mPersonInfo.setOnClickListener(this);
+        initUserData();
+    }
+
+    public void initUserData(){
         setPortrait();
 
         mUserName.setText(User.getInstance().getUserName());
         mUserId.setText(User.getInstance().getUserId());
-
-        mPersonInfo.setOnClickListener(this);
     }
 
     public void setPortrait(){

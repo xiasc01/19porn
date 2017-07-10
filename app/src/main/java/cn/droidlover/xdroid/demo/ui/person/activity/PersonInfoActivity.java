@@ -1,5 +1,6 @@
 package cn.droidlover.xdroid.demo.ui.person.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,20 +19,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
+import cn.droidlover.xdroid.demo.ui.LoginActivity;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 
 public class PersonInfoActivity extends AppCompatActivity implements View.OnClickListener{
     private static int RESULT_LOAD_IMAGE = 1;
-
 
     PersonItem mUserId;
     PersonItem mUserName;
@@ -41,6 +45,7 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
 
     Bitmap pngBM;
 
+    Button loginOutBtn;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -62,11 +67,11 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
 
         mUserId = (PersonItem)findViewById(R.id.userId);
         mUserId.setItemName("ID");
-        mUserId.setItemValue("529548");
+        mUserId.setItemValue(User.getInstance().getUserId());
 
         mUserName = (PersonItem)findViewById(R.id.userName);
         mUserName.setItemName("昵称");
-        mUserName.setItemValue("海边的卡夫卡");
+        mUserName.setItemValue(User.getInstance().getUserName());
         mUserName.setOnClickListener(this);
 
         mPassword = (PersonItem)findViewById(R.id.password);
@@ -75,9 +80,18 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
 
         mEmail = (PersonItem)findViewById(R.id.email);
         mEmail.setItemName("邮箱");
-        mEmail.setItemValue("未设置");
+        String email = User.getInstance().getEmail();
+        if(email == null || email.length() == 0){
+            mEmail.setItemValue("未设置");
+        }else{
+            mEmail.setItemValue(email);
+        }
+
         mEmail.setOnClickListener(this);
-        mEmail.setLineVisible(View.GONE);
+        //mEmail.setLineVisible(View.GONE);
+
+        loginOutBtn = (Button) findViewById(R.id.login_out);
+        loginOutBtn.setOnClickListener(this);
     }
 
 
@@ -97,6 +111,10 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
 
         if(v.getId() == R.id.email){
             modifyEmail();
+        }
+
+        if(v.getId() == R.id.login_out){
+            loginOut();
         }
     }
 
@@ -194,6 +212,14 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
         final View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_modify_password,null);
         final EditText password1 = (EditText)dialogView.findViewById(R.id.edit_password1);
         final EditText password2 = (EditText)dialogView.findViewById(R.id.edit_password2);
+        final EditText password3 = (EditText)dialogView.findViewById(R.id.edit_password3);
+
+        final String password = User.getInstance().getPassword();
+        if(password == null || password.length() == 0){
+            final View view1 = dialogView.findViewById(R.id.layout_password1);
+            view1.setVisibility(View.GONE);
+        }
+
         final Context context = (Context) this;
         inputDialog.setTitle("设置用户密码").setView(dialogView);
 
@@ -203,14 +229,22 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
                     public void onClick(DialogInterface dialog, int which) {
                         String strPwd1 = password1.getText().toString();
                         String strPwd2 = password2.getText().toString();
-                        if(strPwd1.equals(strPwd2)){
-                            User.getInstance().setUserPassword(strPwd1);
-                        }
-                        else {
+                        String strPwd3 = password3.getText().toString();
+                        if(password == null || password.length() == 0 || AppKit.stringToMD5(strPwd1).equals(password)){
+                            if(strPwd2.equals(strPwd3)){
+                                User.getInstance().setUserPassword(strPwd2);
+                            }
+                            else {
+                                modifyPassword();
+                                Toast toast = Toast.makeText(context, "两次输入的密码不一致", Toast.LENGTH_LONG);
+                                toast.show();
+                            }
+                        }else{
                             modifyPassword();
-                            Toast toast = Toast.makeText(context, "两次输入的密码不一致", Toast.LENGTH_LONG);
+                            Toast toast = Toast.makeText(context, "原始密码错误", Toast.LENGTH_LONG);
                             toast.show();
                         }
+
                     }
                 });
 
@@ -226,6 +260,56 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void modifyEmail(){
+        AlertDialog.Builder inputDialog =  new AlertDialog.Builder(this);
+        final View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_modify_username,null);
+        final EditText editText = (EditText)dialogView.findViewById(R.id.edit_username);
+        inputDialog.setTitle("修改用户邮箱").setView(dialogView);
 
+        final Context context = (Context) this;
+
+        inputDialog.setPositiveButton("确定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String email = editText.getText().toString();
+
+                        boolean flag = false;
+                        try{
+                            String check = "^([a-z0-9A-Z]+[-|_|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+                            Pattern regex = Pattern.compile(check);
+                            Matcher matcher = regex.matcher(email);
+                            flag = matcher.matches();
+                        }catch(Exception e){
+                            flag = false;
+                        }
+
+
+
+                        if(email != null && email.length() > 0 && flag){
+                            User.getInstance().setEmail(email);
+                            mEmail.setItemValue(email);
+                        }else{
+                            modifyEmail();
+                            Toast toast = Toast.makeText(context, "邮箱格式不正确", Toast.LENGTH_LONG);
+                            toast.show();
+                        }
+                    }
+                });
+
+        inputDialog.setNegativeButton("关闭",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //...To-do
+                    }
+                });
+
+        inputDialog.show();
+        editText.clearFocus();
+    }
+
+    public void loginOut(){
+        Intent intent = new Intent((Activity)this, LoginActivity.class);
+        this.startActivityForResult(intent,5);
     }
 }

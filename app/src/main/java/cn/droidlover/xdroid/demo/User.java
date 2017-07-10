@@ -35,6 +35,7 @@ public class User {
     private String mUserId    =  null;
     private String mUserName  =  null;
     private String mPassword  =  null;
+    private String mEmail     =  null;
 
     private String mStatus = "false";
     private int mReConnect = 0;
@@ -112,13 +113,14 @@ public class User {
 
             @Override
             public void onResponse(User response, int id) {
-                if(!user.mStatus.equals("ok")){
+                if(!response.mStatus.equals("ok")){
                     mUserId    = null;
                     mPassword  = null;
                     return;
                 }
 
                 user.mUserName  = response.mUserName;
+                user.mEmail     = response.mEmail;
             }
         };
 
@@ -216,11 +218,57 @@ public class User {
 
     public void setUserName(String userName){
         mUserName = userName;
+        String signature = getSignature();
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","modify_user_name");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+        params.put("user_name", userName);
+
+        NetApi.invokeGet(params,null);
+
         return;
     }
 
-    public void setUserPassword(String pwd){
+    public String getEmail(){
+        return mEmail;
+    }
 
+    public void setEmail(String email){
+        mEmail = email;
+        String signature = getSignature();
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","modify_email");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+        params.put("email", email);
+
+        NetApi.invokeGet(params,null);
+
+        return;
+    }
+
+    public String getPassword(){
+        return mPassword;
+    }
+
+    public void setUserPassword(String password){
+        String signature = getSignature();
+
+        mPassword = AppKit.stringToMD5(password);
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","modify_password");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+        params.put("user_password", mPassword);
+
+        NetApi.invokeGet(params,null);
+        PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit().putString("mPassword",user.mPassword).commit();
+
+        return;
     }
 
     public Bitmap setUserPortrait(Bitmap bitmap) {
@@ -345,6 +393,8 @@ public class User {
 
                 user.mUserId    = response.mUserId;
                 user.mPassword  = response.mPassword;
+                user.mUserName  = response.mUserName;
+                user.mEmail     = response.mEmail;
 
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit();
                 editor.putString("mUserId",user.mUserId);

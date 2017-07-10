@@ -87,7 +87,7 @@ public class MainActivity2 extends XActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data){
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 1){
-            ((PersonFragment)personFragment).setPortrait();
+            ((PersonFragment)personFragment).initUserData();
         }
     }
 }

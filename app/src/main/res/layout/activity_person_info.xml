@@ -5,7 +5,8 @@
     android:id="@+id/activity_person_info"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="cn.droidlover.xdroid.demo.ui.person.activity.PersonInfoActivity">
+    tools:context="cn.droidlover.xdroid.demo.ui.person.activity.PersonInfoActivity"
+    android:foreground="@color/design_fab_shadow_mid_color">
 
     <cn.droidlover.xdroid.demo.ui.CommonActivityHeadView
         android:layout_width="match_parent"
@@ -52,5 +53,15 @@
             android:id="@+id/email">
 
         </cn.droidlover.xdroid.demo.ui.PersonItem>
+
+        <Button
+            android:text="退出登录"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/login_out"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:foreground="@color/design_fab_shadow_mid_color"
+            android:layout_marginTop="50dp" />
     </LinearLayout>
+
 </RelativeLayout>
