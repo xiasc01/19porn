@@ -310,6 +310,6 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
 
     public void loginOut(){
         Intent intent = new Intent((Activity)this, LoginActivity.class);
-        this.startActivityForResult(intent,5);
+        this.startActivityForResult(intent,1);
     }
 }
