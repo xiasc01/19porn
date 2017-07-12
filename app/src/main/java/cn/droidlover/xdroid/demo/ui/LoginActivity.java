@@ -3,6 +3,8 @@ package cn.droidlover.xdroid.demo.ui;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.User;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -100,6 +103,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        User user = User.getInstance();
+        if(!user.isLoginOut()){
+            Intent intent = new Intent((Activity)this, MainActivity2.class);
+            this.startActivityForResult(intent,2);
+        }
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        //android.os.Process.killProcess(android.os.Process.myPid());
+        //System.exit(0);
     }
 
     private void populateAutoComplete() {
@@ -168,7 +184,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+        /*if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
@@ -183,7 +199,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
-        }
+        }*/
 
         if (cancel) {
             // There was an error; don't attempt login and focus the first
@@ -270,7 +286,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             cursor.moveToNext();
         }
 
-        addEmailsToAutoComplete(emails);
+        //addEmailsToAutoComplete(emails);
     }
 
     @Override
@@ -278,14 +294,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     }
 
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
+    /*private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
                 new ArrayAdapter<>(LoginActivity.this,
                         android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
         mEmailView.setAdapter(adapter);
-    }
+    }*/
 
 
     private interface ProfileQuery {
@@ -306,7 +322,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
-
+        private final Object mLock = new Object();
+        private boolean      mLoginSuccess = false;
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
@@ -331,8 +348,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             }
 
+            User.getInstance().manualLogin(mEmail, mPassword, new User.LoginCallback() {
+                @Override
+                public void onLogin(String status) {
+
+                    synchronized(mLock){
+                        mLock.notify();
+                    }
+
+                    mLoginSuccess = status.equalsIgnoreCase("ok");
+                }
+            });
+
+            synchronized(mLock){
+                try {
+                    mLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             // TODO: register the new account here.
-            return true;
+            return mLoginSuccess;
         }
 
         @Override

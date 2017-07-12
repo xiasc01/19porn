@@ -80,6 +80,10 @@ public class User {
         return true;
     }
 
+    public boolean isLoginOut(){
+        return getCacheLoginOutStatus();
+    }
+
     public boolean getLoginStatus(){
         if(mUserId == null || mPassword == null){
             return false;
