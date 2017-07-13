@@ -37,8 +37,10 @@ import java.util.List;
 
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
+import cn.droidlover.xdroid.demo.ui.person.PersonFragment;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 /**
  * A login screen that offers login via email/password.
@@ -63,19 +65,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private UserLoginTask mAuthTask = null;
 
     // UI references.
-    private EditText mEmailView;
+    private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-
+    private Object mLock = new Object();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        mayRequestPermission();
+
+
         // Set up the login form.
-        mEmailView = (EditText) findViewById(R.id.email);
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        /*String [] arr={"aa","aab","aac"};
+        ArrayAdapter arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,arr);
+        mEmailView.setAdapter(arrayAdapter);*/
+
+
         mEmailView.setHintTextColor(Color.parseColor("#20000000"));
-        populateAutoComplete();
+        //populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -96,26 +107,76 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 attemptLogin();
             }
         });
-        mEmailSignInButton.setFocusable(true);
-        mEmailSignInButton.setFocusableInTouchMode(true);
-        mEmailSignInButton.requestFocus();
-        mEmailSignInButton.requestFocusFromTouch();
+        //mEmailSignInButton.setFocusable(true);
+        //mEmailSignInButton.setFocusableInTouchMode(true);
+        //mEmailSignInButton.requestFocus();
+        //mEmailSignInButton.requestFocusFromTouch();
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
         User user = User.getInstance();
+        String userId = user.getUserId();
+        if(userId != null && userId.length() !=0 ){
+            mEmailView.setText(userId);
+        }
+
         if(!user.isLoginOut()){
-            Intent intent = new Intent((Activity)this, MainActivity2.class);
-            this.startActivityForResult(intent,2);
+            StartMainActivity();
         }
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 2){
+            //this.finish();
+        }
+    }
+
 
     @Override
     protected void onDestroy(){
         super.onDestroy();
         //android.os.Process.killProcess(android.os.Process.myPid());
         //System.exit(0);
+    }
+
+    private boolean mayRequestPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        if (shouldShowRequestPermissionRationale(WRITE_EXTERNAL_STORAGE)) {
+            /*Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        @TargetApi(Build.VERSION_CODES.M)
+                        public void onClick(View v) {
+                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+                        }
+                    });*/
+        } else {
+            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, 3);
+            synchronized(mLock){
+                try {
+                    mLock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
+
+    private void StartMainActivity(){
+        Intent intent = new Intent((Activity)this, MainActivity2.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivityForResult(intent,2);
+        finish();
     }
 
     private void populateAutoComplete() {
@@ -130,9 +191,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
         }
+
         if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             return true;
         }
+
         if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
             Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
@@ -159,6 +222,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 populateAutoComplete();
             }
         }
+
+        if(requestCode == 3){
+            if(requestCode == 3){
+                synchronized(mLock){
+                    mLock.notify();
+                }
+            }
+        }
     }
 
 
@@ -182,6 +253,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         boolean cancel = false;
         View focusView = null;
+
+        if (TextUtils.isEmpty(password) ) {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
+            focusView = mPasswordView;
+            cancel = true;
+        }
 
         // Check for a valid password, if the user entered one.
         /*if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
@@ -324,6 +401,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mPassword;
         private final Object mLock = new Object();
         private boolean      mLoginSuccess = false;
+        private String       mError;
+
         UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
@@ -352,11 +431,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onLogin(String status) {
 
+                    mLoginSuccess = status.equalsIgnoreCase("ok");
+                    mError = status;
+
                     synchronized(mLock){
                         mLock.notify();
                     }
-
-                    mLoginSuccess = status.equalsIgnoreCase("ok");
                 }
             });
 
@@ -378,9 +458,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                StartMainActivity();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError(mError);
                 mPasswordView.requestFocus();
             }
         }

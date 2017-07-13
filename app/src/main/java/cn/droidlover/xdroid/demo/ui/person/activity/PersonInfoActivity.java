@@ -309,7 +309,20 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
     }
 
     public void loginOut(){
+
+        //Toast toast = Toast.makeText(this, "您还没有设置密码，必须设置密码后才能退出登录", Toast.LENGTH_LONG);
+        //toast.show();
+
+        //return;
+
+        User.getInstance().loginOut();
         Intent intent = new Intent((Activity)this, LoginActivity.class);
-        this.startActivityForResult(intent,1);
+        startActivityForResult(intent,1);
+        finish();
+
+        if(AppKit.mainActivity != null && !AppKit.mainActivity.isFinishing()){
+            AppKit.mainActivity.finish();
+        }
+
     }
 }

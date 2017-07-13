@@ -24,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+import cn.droidlover.xdroid.demo.ui.MainActivity2;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okio.Buffer;
@@ -35,6 +36,8 @@ import okio.Buffer;
 public class AppKit {
 
     private static String serverUrl = "http://www.3ysd.net";
+
+    public static MainActivity2 mainActivity = null;
 
     public static void copyToClipBoard(Context context, String text) {
         ClipboardManager cm = (ClipboardManager) context.getSystemService(
@@ -207,4 +210,5 @@ public class AppKit {
         }
         return null;
     }
+
 }

@@ -69,8 +69,7 @@
         <activity android:name=".ui.person.activity.InvitationActivity" />
         <activity
             android:name=".ui.LoginActivity"
-            android:icon="@mipmap/xdroid_logo_128"
-            android:launchMode="singleTask" >
+            android:icon="@mipmap/xdroid_logo_128">
             <!--android:label="@string/title_activity_login">-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
