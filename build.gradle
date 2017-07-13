@@ -26,5 +26,5 @@ task clean(type: Delete) {
 
 dependencies {
     //compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    //compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha2'
+   // compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha7'
 }

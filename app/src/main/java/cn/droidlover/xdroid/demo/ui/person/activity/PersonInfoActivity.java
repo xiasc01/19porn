@@ -31,7 +31,7 @@ import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
-import cn.droidlover.xdroid.demo.ui.LoginActivity;
+//import cn.droidlover.xdroid.demo.ui.LoginActivity;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 
 public class PersonInfoActivity extends AppCompatActivity implements View.OnClickListener{
@@ -309,7 +309,7 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
     }
 
     public void loginOut(){
-        Intent intent = new Intent((Activity)this, LoginActivity.class);
-        this.startActivityForResult(intent,5);
+        //Intent intent = new Intent((Activity)this, LoginActivity.class);
+        //this.startActivityForResult(intent,5);
     }
 }
