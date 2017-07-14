@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,15 +32,20 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
+import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.person.PersonFragment;
 
+import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 /**
@@ -74,9 +80,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        mayRequestPermission();
-
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -115,14 +118,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-        User user = User.getInstance();
-        String userId = user.getUserId();
-        if(userId != null && userId.length() !=0 ){
-            mEmailView.setText(userId);
-        }
-
-        if(!user.isLoginOut()){
-            StartMainActivity();
+        if(mayRequestPermission()){
+            InitMainActivity();
         }
     }
 
@@ -150,6 +147,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             return true;
         }
         if (shouldShowRequestPermissionRationale(WRITE_EXTERNAL_STORAGE)) {
+            Log.i(App.TAG,"shouldShowRequestPermissionRationale");
             /*Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
                         @Override
@@ -158,19 +156,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
                         }
                     });*/
+            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE}, 3);
         } else {
-            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, 3);
-            synchronized(mLock){
-                try {
-                    mLock.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,CALL_PHONE}, 3);
         }
         return false;
     }
 
+    private void InitMainActivity(){
+        User user = User.getInstance();
+        String userId = user.getUserId();
+        if(userId != null && userId.length() !=0 ){
+            mEmailView.setText(userId);
+        }
+
+        if(!user.isLoginOut()){
+            StartMainActivity();
+        }
+    }
 
     private void StartMainActivity(){
         Intent intent = new Intent((Activity)this, MainActivity2.class);
@@ -180,36 +183,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
+        /*if (!mayRequestContacts()) {
             return;
-        }
+        }*/
 
         getLoaderManager().initLoader(0, null, this);
     }
 
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
 
     /**
      * Callback received when a permissions request has been completed.
@@ -224,11 +204,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
 
         if(requestCode == 3){
-            if(requestCode == 3){
-                synchronized(mLock){
-                    mLock.notify();
-                }
+            if(grantResults[0] == -1){
+                Toast toast = Toast.makeText(this, "不同意存储权限，将无法使用本软件，请退出重新启动", Toast.LENGTH_LONG);
+                toast.show();
+            }else{
+                InitMainActivity();
             }
+
         }
     }
 
