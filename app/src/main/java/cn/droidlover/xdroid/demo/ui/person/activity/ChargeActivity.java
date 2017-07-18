@@ -148,7 +148,7 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
             public void onClick(View view) {
                 //inputDialog.dismiss();
 
-                pay(getPayAmountFormId(id));
+                pay(getPayAmountFormId(id),getPayCoinFormId(id));
 
                //String text   = "充值成功! 订单号435532 请尽快向支付宝" + mCharge.payAccount + "转账5.00 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
                 //String notice = "      您有一笔交易未支付，订单号435532 请尽快向支付宝" + mCharge.payAccount + "转账5.00 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
@@ -194,12 +194,24 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
         return 0;
     }
 
-    private int pay(final float amount){
+    private float getPayCoinFormId(int id){
+        if(mCharge != null){
+            if(id >= 0 && id < mCharge.chargeItems.size()){
+                ChargeItem chargeItem = mCharge.chargeItems.get(id);
+                return Float.parseFloat(chargeItem.value);
+            }
+        }
+
+        return 0;
+    }
+
+    private int pay(final float amount,final float  coin){
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("request_type","pay");
         params.put("user_id", User.getInstance().getUserId());
         params.put("signature", User.getInstance().getSignature());
         params.put("amount", amount + "");
+        params.put("coin", coin + "");
         String msg = "";
 
         final Dialog inputDialog =  new Dialog(this);
@@ -231,7 +243,7 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
 
                     if(mReConnect < 5){
                         AppKit.updateServerUrl();
-                        pay(amount);
+                        pay(amount,coin);
                         return;
                     }else {
                         msg = "充值失败 网络超时 请稍后再试";
@@ -248,12 +260,16 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
             public void onResponse(String response, int id) {
                 Log.i(App.TAG,"order id = " + response);
 
-                String text   = "充值成功! 订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                chargeNotice.setText(text);
+                if(response.indexOf("支付失败") != -1){
+                    chargeNotice.setText(response);
+                }else{
+                    String text   = "充值成功! 订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
+                    chargeNotice.setText(text);
 
 
-                String notice = "      您有一笔交易未支付，订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                mNotice.setText(notice);
+                    String notice = "      您有一笔交易未支付，订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
+                    mNotice.setText(notice);
+                }
 
                 inputDialog.show();
                 showProgress(false);
