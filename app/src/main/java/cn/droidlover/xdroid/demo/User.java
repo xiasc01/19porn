@@ -80,6 +80,10 @@ public class User {
         return true;
     }
 
+    public boolean isLoginOut(){
+        return getCacheLoginOutStatus();
+    }
+
     public boolean getLoginStatus(){
         if(mUserId == null || mPassword == null){
             return false;
@@ -135,10 +139,7 @@ public class User {
     }
 
     public boolean manualLogin(final String userId, final String password, final LoginCallback loginCallback){
-        String passwordHash = LoginMagic1 + password + LoginMagic2;
-        passwordHash = AppKit.stringToMD5(passwordHash);
-
-        mPassword        = passwordHash;
+        mPassword        = AppKit.stringToMD5(password);
         mUserId          = userId;
 
         String signature = getSignature();
@@ -170,8 +171,8 @@ public class User {
 
             @Override
             public void onResponse(User response, int id) {
-                if(!user.mStatus.equals("ok")){
-                    loginCallback.onLogin(user.mStatus);
+                if(!response.mStatus.equals("ok")){
+                    loginCallback.onLogin("账号或者密码出错");
                     mUserId    = null;
                     mPassword  = null;
                     return;
@@ -179,16 +180,26 @@ public class User {
 
                 user.mUserId    = response.mUserId;
                 user.mPassword  = response.mPassword;
+                user.mUserName  = response.mUserName;
+                user.mEmail     = response.mEmail;
 
-                DiskCache.getInstance(App.getContext()).put("mUserId",user.mUserId);
-                DiskCache.getInstance(App.getContext()).put("mPassword",user.mPassword);
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit();
+                editor.putString("mUserId",user.mUserId);
+                editor.putString("mPassword",user.mPassword);
+                editor.remove("loginOutStatus");
+                editor.commit();
 
-                loginCallback.onLogin(user.mStatus);
+                loginCallback.onLogin(response.mStatus);
             }
         };
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("request_type","user_login");
+
+        if(userId == null || userId.length() == 0){
+            params.put("device_id",AppKit.getDeviceId(App.getContext()));
+        }
+
         params.put("user_id",userId);
         params.put("signature", signature);
 
@@ -198,9 +209,10 @@ public class User {
     }
 
     public boolean loginOut(){
-        DiskCache.getInstance(App.getContext()).remove("mUserId");
-        DiskCache.getInstance(App.getContext()).remove("mPassword");
-        DiskCache.getInstance(App.getContext()).put("loginOutStatus","true",Integer.MAX_VALUE);
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit();
+        editor.putString("loginOutStatus","true");
+        editor.remove("mPassword");
+        editor.commit();
 
         mUserId = null;
         mPassword = null;
@@ -209,7 +221,11 @@ public class User {
     }
 
     public String getUserId(){
-        return mUserId;
+        if(mUserId != null){
+            return mUserId;
+        }
+
+        return getCacheUserId();
     }
 
     public String getUserName(){

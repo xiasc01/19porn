@@ -4,20 +4,29 @@ package cn.droidlover.xdroid.demo.ui;
  * Created by Administrator on 2017/5/7 0007.
  */
 
+import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.person.PersonFragment;
+
+import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity2 extends XActivity {
 
@@ -38,6 +47,8 @@ public class MainActivity2 extends XActivity {
 
     @Override
     public void initData(Bundle savedInstanceState) {
+        AppKit.mainActivity = this;
+
         fragmentManager = getSupportFragmentManager();
         radioGroup = (RadioGroup)findViewById(R.id.radioGroup1);
         ((RadioButton)radioGroup.findViewById(R.id.radio0)).setChecked(true);

@@ -92,7 +92,9 @@
                 android:text="自拍"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/label_content" />
+                android:id="@+id/label_content"
+                android:textStyle="normal|bold"
+                android:textSize="12sp" />
 
             <TextView
                 android:text=" | "
@@ -101,10 +103,12 @@
                 android:id="@+id/textView6" />
 
             <TextView
-                android:text="高清"
+                android:text="画质 8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/label_pic_grade" />
+                android:id="@+id/label_pic_grade"
+                android:textStyle="normal|bold"
+                android:textSize="12sp" />
 
             <TextView
                 android:text=" | "
@@ -113,10 +117,12 @@
                 android:id="@+id/textView7" />
 
             <TextView
-                android:text="精彩"
+                android:text="内容 7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/label_content_grade" />
+                android:id="@+id/label_content_grade"
+                android:textStyle="normal|bold"
+                android:textSize="12sp" />
 
         </LinearLayout>
 

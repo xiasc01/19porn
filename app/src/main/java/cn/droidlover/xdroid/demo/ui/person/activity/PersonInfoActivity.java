@@ -32,6 +32,7 @@ import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 //import cn.droidlover.xdroid.demo.ui.LoginActivity;
+import cn.droidlover.xdroid.demo.ui.LoginActivity;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 
 public class PersonInfoActivity extends AppCompatActivity implements View.OnClickListener{
@@ -227,24 +228,34 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String msg = "";
+                        boolean success = false;
                         String strPwd1 = password1.getText().toString();
                         String strPwd2 = password2.getText().toString();
                         String strPwd3 = password3.getText().toString();
                         if(password == null || password.length() == 0 || AppKit.stringToMD5(strPwd1).equals(password)){
-                            if(strPwd2.equals(strPwd3)){
+                            if(strPwd2 != null && strPwd2.length() > 0 && strPwd2.equals(strPwd3)){
                                 User.getInstance().setUserPassword(strPwd2);
+                                msg = "修改密码成功";
+                                success = true;
                             }
                             else {
-                                modifyPassword();
-                                Toast toast = Toast.makeText(context, "两次输入的密码不一致", Toast.LENGTH_LONG);
-                                toast.show();
+                                if(!strPwd2.equals(strPwd3)){
+                                    msg = "两次输入密码不一致";
+                                }else{
+                                    msg = "新密码不能为空";
+                                }
+
                             }
                         }else{
-                            modifyPassword();
-                            Toast toast = Toast.makeText(context, "原始密码错误", Toast.LENGTH_LONG);
-                            toast.show();
+                            msg = "原始密码错误";
                         }
+                        Toast toast = Toast.makeText(context, msg, Toast.LENGTH_LONG);
+                        toast.show();
 
+                        if(!success){
+                            modifyPassword();
+                        }
                     }
                 });
 
@@ -309,7 +320,43 @@ public class PersonInfoActivity extends AppCompatActivity implements View.OnClic
     }
 
     public void loginOut(){
-        //Intent intent = new Intent((Activity)this, LoginActivity.class);
-        //this.startActivityForResult(intent,5);
+        String password = User.getInstance().getPassword();
+        if(password == null || password.length() == 0){
+            Toast toast = Toast.makeText(this, "您还没有设置密码，必须设置密码后才能退出登录", Toast.LENGTH_LONG);
+            toast.show();
+            modifyPassword();
+            return;
+        }
+
+
+
+        AlertDialog.Builder inputDialog =  new AlertDialog.Builder(this);
+        inputDialog.setTitle("是否确定退出登陆，如退出登陆请记牢您的密码，否则无法再登入");
+
+        final Activity context = this;
+        inputDialog.setPositiveButton("确定",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        User.getInstance().loginOut();
+                        Intent intent = new Intent((Activity)context, LoginActivity.class);
+                        startActivityForResult(intent,1);
+                        finish();
+
+                        if(AppKit.mainActivity != null && !AppKit.mainActivity.isFinishing()){
+                            AppKit.mainActivity.finish();
+                        }
+                    }
+                });
+
+        inputDialog.setNegativeButton("关闭",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //...To-do
+                    }
+                });
+
+        inputDialog.show();
     }
 }

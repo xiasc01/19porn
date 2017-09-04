@@ -34,6 +34,7 @@ public class MovieInfo extends BaseModel {
         private String thumb_pos;
         private String thumb_size;
         private String type;
+        private String set_name;
         private Boolean hasPlay = false;
         //private
 
@@ -162,6 +163,14 @@ public class MovieInfo extends BaseModel {
 
         public void setId(String id) {
             this.id = id;
+        }
+
+        public String getSet_name() {
+            return set_name;
+        }
+
+        public void setSet_name(String set_name) {
+            this.set_name = set_name;
         }
     }
 }

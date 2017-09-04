@@ -16,11 +16,6 @@
 
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
-    <!-- To auto-complete the email text field in the login form with the user's emails -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -44,11 +39,13 @@
             android:name=".ui.MainActivity2"
             android:icon="@mipmap/xdroid_logo_128"
             android:screenOrientation="portrait">
+            <!--
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            -->
         </activity>
         <activity android:name=".ui.AboutActivity" />
         <activity android:name=".ui.WebActivity" />
@@ -66,8 +63,15 @@
         <activity android:name=".ui.person.activity.ChargeActivity" />
         <activity android:name=".ui.person.activity.InvitationActivity" />
         <activity
-            android:name=".LoginActivity"
-            android:label="@string/title_activity_login"></activity>
+            android:name=".ui.LoginActivity"
+            android:icon="@mipmap/xdroid_logo_128">
+            <!--android:label="@string/title_activity_login">-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
