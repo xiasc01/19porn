@@ -35,7 +35,7 @@ import okio.Buffer;
 
 public class AppKit {
 
-    private static String serverUrl = "http://www.3ysd.net";
+    private static String serverUrl = "http://l.dahaiwenhua.com/19porn.php";
 
     public static MainActivity2 mainActivity = null;
 
@@ -151,7 +151,7 @@ public class AppKit {
     }
 
     public static boolean updateServerUrl(){
-        serverUrl = "http://www.3ysd.net";
+        serverUrl = "http://l.3ysd.net/19porn.php";
         return true;
     }
 

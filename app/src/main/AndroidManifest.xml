@@ -59,9 +59,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.MainActivity" />
         </activity>
+
         <activity android:name=".ui.person.activity.PersonInfoActivity" />
         <activity android:name=".ui.person.activity.ChargeActivity" />
         <activity android:name=".ui.person.activity.InvitationActivity" />
+        <activity android:name=".ui.person.activity.AccountActivity" />
+
         <activity
             android:name=".ui.LoginActivity"
             android:icon="@mipmap/xdroid_logo_128">

@@ -20,8 +20,10 @@ public class PersonItem extends RelativeLayout implements View.OnClickListener {
     Context     mContext;
     TextView    mItemName;
     TextView    mItemValue;
+    TextView    mItemValue2;
     ImageView   mItemValueImage;
     ImageView   mItemNameImage;
+    ImageView   mItemValue2Image;
     View        mLine;
     View        mItemLayout;
     View        mArrow;
@@ -37,12 +39,14 @@ public class PersonItem extends RelativeLayout implements View.OnClickListener {
         mItemLayout = (View)findViewById(R.id.item_layout);
         mItemLayout.setOnClickListener(this);
 
-        mItemName       = (TextView)findViewById(R.id.item_name);
-        mItemValue      = (TextView)findViewById(R.id.item_value);
-        mItemValueImage = (ImageView)findViewById(R.id.item_value_image);
-        mItemNameImage  = (ImageView)findViewById(R.id.item_name_image);
-        mLine           = (View)findViewById(R.id.line);
-        mArrow          = (View)findViewById(R.id.image_arrow);
+        mItemName           = (TextView)findViewById(R.id.item_name);
+        mItemValue          = (TextView)findViewById(R.id.item_value);
+        mItemValue2          = (TextView)findViewById(R.id.item_value2);
+        mItemValueImage     = (ImageView)findViewById(R.id.item_value_image);
+        mItemNameImage      = (ImageView)findViewById(R.id.item_name_image);
+        mItemValue2Image    = (ImageView)findViewById(R.id.item_value2_image);
+        mLine               = (View)findViewById(R.id.line);
+        mArrow              = (View)findViewById(R.id.image_arrow);
     }
 
     @Override
@@ -53,15 +57,40 @@ public class PersonItem extends RelativeLayout implements View.OnClickListener {
     }
 
     public void setItemName(String itemName){
+        if(itemName == null){
+            mItemName.setVisibility(View.GONE);
+            return;
+        }
+
         mItemName.setText(itemName);
     }
 
     public void setItemValue(String itemValue){
+        if(itemValue == null){
+            mItemValue.setVisibility(View.GONE);
+            return;
+        }
+
         mItemValue.setVisibility(View.VISIBLE);
         mItemValue.setText(itemValue);
     }
 
+    public void setItemValue2(String itemValue){
+        if(itemValue == null){
+            mItemValue2.setVisibility(View.GONE);
+            return;
+        }
+
+        mItemValue2.setVisibility(View.VISIBLE);
+        mItemValue2.setText(itemValue);
+    }
+
     public void setItemValueImage(Bitmap bitmap){
+        if(bitmap == null){
+            mItemValueImage.setVisibility(View.GONE);
+            return;
+        }
+
         mItemValueImage.setVisibility(View.VISIBLE);
         mItemValueImage.setImageBitmap(bitmap);
 
@@ -74,17 +103,9 @@ public class PersonItem extends RelativeLayout implements View.OnClickListener {
         mItemLayout.setPadding(left,top,right,bottom);
     }
 
-    public void setItemNameImage(Bitmap bitmap){
-        mItemNameImage.setVisibility(View.VISIBLE);
-        mItemNameImage.setImageBitmap(bitmap);
-
-        Context context = getContext();
-        int left   = AppKit.dip2px(context,12f);
-        int top    = AppKit.dip2px(context,5f);
-        int right  = AppKit.dip2px(context,12f);
-        int bottom = AppKit.dip2px(context,5f);
-
-        mItemLayout.setPadding(left,top,right,bottom);
+    public void setItemValue2Image(int resId){
+        mItemValue2Image.setVisibility(View.VISIBLE);
+        mItemValue2Image.setImageResource(resId);
     }
 
     public void setItemNameImage(int resId){

@@ -15,8 +15,11 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.zhy.http.okhttp.callback.StringCallback;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import butterknife.BindView;
@@ -25,9 +28,11 @@ import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
+import cn.droidlover.xdroid.demo.ui.person.activity.AccountActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.ChargeActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.InvitationActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.PersonInfoActivity;
+import okhttp3.Call;
 
 import static android.net.wifi.SupplicantState.COMPLETED;
 
@@ -82,6 +87,32 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         }
     };
 
+    class CoinStringCallback extends StringCallback{
+        public int mType = 0;
+
+        public CoinStringCallback(int type){
+            mType = type;
+        }
+        @Override
+        public void onError(Call call, Exception e, int id) {
+            e.printStackTrace();
+        }
+
+        @Override
+        public void onResponse(String response, int id) {
+            if(mType == 0){
+                mAccount.setItemValue(response);
+            }else{
+                int unVerifyCoin = Integer.parseInt(response);
+                if(unVerifyCoin != 0){
+                    mAccount.setItemValue2("(" + response + ")");
+                }else{
+                    mAccount.setItemValue2(null);
+                }
+            }
+        }
+    }
+
     @Override
     public void initData(Bundle savedInstanceState) {
 
@@ -97,6 +128,19 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         mAccount.setItemName("账户");
         mAccount.setOnClickListener(this);
         mAccount.setLineVisible(View.INVISIBLE);
+        mAccount.setItemValue(User.getInstance().getCoin(null));
+        int unVerifyCoin = Integer.parseInt(User.getInstance().getUnVerifyCoin(null));
+        if(unVerifyCoin != 0){
+            mAccount.setItemValue2("(" + unVerifyCoin + ")");
+        }else{
+            mAccount.setItemValue2(null);
+        }
+        mAccount.setItemValue2Image(R.mipmap.pay_diamond);
+        getNewAccountInfo();
+
+
+
+
 
         mPlayHistory.setItemName("播放历史");
         mPlayHistory.setOnClickListener(this);
@@ -122,6 +166,11 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
 
         mUserName.setText(User.getInstance().getUserName());
         mUserId.setText(User.getInstance().getUserId());
+    }
+
+    public void getNewAccountInfo(){
+        User.getInstance().getCoin(new CoinStringCallback(0));
+        User.getInstance().getUnVerifyCoin(new CoinStringCallback(1));
     }
 
     public void setPortrait(){
@@ -156,6 +205,9 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         return R.layout.person_fragment;
     }
 
+
+
+
     @Override
     public void onClick(View v) {
         Intent intent = null;
@@ -168,6 +220,10 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
 
         if(v.getId() == R.id.invitation){
             intent = new Intent((Activity)context, InvitationActivity.class);
+        }
+
+        if(v.getId() == R.id.account){
+            intent = new Intent((Activity)context, AccountActivity.class);
         }
 
         if(intent != null){

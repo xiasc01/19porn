@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.zhy.http.okhttp.callback.Callback;
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.io.File;
@@ -36,7 +37,8 @@ public class User {
     private String mUserName  =  null;
     private String mPassword  =  null;
     private String mEmail     =  null;
-
+    private String mCoin      =  null;
+    private String mUnVerifyCoin =  null;
     private String mStatus = "false";
     private int mReConnect = 0;
 
@@ -125,6 +127,8 @@ public class User {
 
                 user.mUserName  = response.mUserName;
                 user.mEmail     = response.mEmail;
+                user.mCoin      = response.mCoin;
+                user.mUnVerifyCoin = response.mUnVerifyCoin;
             }
         };
 
@@ -264,6 +268,39 @@ public class User {
         NetApi.invokeGet(params,null);
 
         return;
+    }
+
+    public String getCoin(Callback<String> onCallBack){
+        if(onCallBack == null){
+            return  mCoin;
+        }
+
+        String signature = getSignature();
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","get_coin");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+
+        NetApi.invokeGet(params,onCallBack);
+
+        return "";
+    }
+
+    public String getUnVerifyCoin(Callback<String> onCallBack){
+        if(onCallBack == null){
+            return  mUnVerifyCoin;
+        }
+
+        String signature = getSignature();
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","get_unverify_coin");
+        params.put("user_id",mUserId);
+        params.put("signature", signature);
+
+        NetApi.invokeGet(params,onCallBack);
+        return "";
     }
 
     public String getPassword(){

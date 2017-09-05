@@ -5,36 +5,67 @@
     android:layout_height="wrap_content">
 
     <LinearLayout style="@style/mid_layout"
-        android:id="@+id/item_layout">
+        android:id="@+id/item_layout"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:srcCompat="@mipmap/pay_diamond"
             android:id="@+id/item_name_image"
-            android:visibility="gone"
             android:layout_weight="0"
             android:layout_gravity="left"
-            android:layout_marginRight="8dp" />
-
-        <TextView style="@style/item_text"
-            android:id="@+id/item_name"
-            android:text="名字"/>
-        <TextView style="@style/item_text"
-            android:id="@+id/item_value"
-            android:layout_gravity="right"
-            android:text=""
-            android:gravity="right"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="8dp"
             android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/item_name"
+            style="@style/item_text"
+            android:text="名字" />
+
+        <TextView
+            android:id="@+id/item_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center"
+            android:gravity="right|center"
+            android:layout_marginRight="2dp"
+            android:text="50"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/item_value2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center"
+            android:layout_marginLeft="0dp"
+            android:layout_marginRight="2dp"
+            android:gravity="right|center"
+            android:text="(20)"
+            android:textColor="@color/red"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
         <cn.droidlover.xdroid.demo.ui.CircleImageView
             android:id="@+id/item_value_image"
-            android:layout_centerInParent="true"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_gravity="fill"
+            android:layout_centerInParent="true"
+            android:layout_gravity="center|fill"
             android:layout_marginRight="7dp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/item_value2_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|center"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="1dp"
+            android:src="@mipmap/pay_diamond"
+            android:visibility="gone" />
 
         <ImageView style="@style/img_arrow"
             android:id="@+id/image_arrow"/>
