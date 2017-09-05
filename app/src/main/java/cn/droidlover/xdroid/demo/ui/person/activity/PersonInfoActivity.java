@@ -31,6 +31,7 @@ import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
+//import cn.droidlover.xdroid.demo.ui.LoginActivity;
 import cn.droidlover.xdroid.demo.ui.LoginActivity;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 

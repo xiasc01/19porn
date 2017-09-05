@@ -1014,7 +1014,7 @@ public class AHttp
 				}
 			}		
 		}
-		
+		Log.i(TAG, "desDecrypt streampos = " + streamPos + " size = " + size);
 		return desReadByte;
 	}
 

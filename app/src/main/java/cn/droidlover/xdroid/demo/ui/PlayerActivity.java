@@ -169,6 +169,15 @@ public class PlayerActivity extends Activity {
 			@Override
 			public void onOpenSuccess() {
 				Log.d(DEBUG_TAG, "onOpenSuccess");
+				int width  = mAPlayerAndroid.GetVideoWidth();
+				int height = mAPlayerAndroid.GetVideoHeight();
+
+				if(width > height){
+					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+				}else{
+					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+				}
+
 				play();
 				if(isChangeHwSoftDecoder){
 					mAPlayerAndroid.SetPosition(mCurPosition);

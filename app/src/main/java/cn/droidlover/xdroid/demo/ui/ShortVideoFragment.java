@@ -24,6 +24,8 @@ import cn.droidlover.xrecyclerview.RecyclerItemCallback;
 import cn.droidlover.xrecyclerview.XRecyclerContentLayout;
 import cn.droidlover.xrecyclerview.XRecyclerView;
 import okhttp3.Call;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by wanglei on 2016/12/10.
@@ -43,6 +45,7 @@ public class ShortVideoFragment extends XFragment{
     private int mType = 0;
     private boolean mIsInit = false;
     private int maxId  = 0;
+    private Map<String,List<MovieInfo.Item> >sets = new HashMap<String,List<MovieInfo.Item>>();
 
     private JsonCallback<MovieInfo>  mCallback =   new JsonCallback<MovieInfo>() {
         @Override
@@ -54,10 +57,22 @@ public class ShortVideoFragment extends XFragment{
         public void onResponse(MovieInfo response, int id) {
            // if (!response.isError()) {
                // Log.i(App.TAG,"lzmlsfe getVideos is success");
+
             List<MovieInfo.Item> movies = response.getResults();
 
             for(int i = 0;i < movies.size();i++){
-                getAdapter().addElement(0,movies.get(i));
+
+                MovieInfo.Item movieItem = movies.get(i);
+                if(movieItem.getSet_name() != null && movieItem.getSet_name().length() > 0){
+                    if(sets.containsKey(movieItem.getSet_name())){
+                        List<MovieInfo.Item>movieItems = sets.get(movieItem.getSet_name());
+                        movieItems.add(movieItem);
+                    }else{
+                        getAdapter().addElement(0,movieItem);
+                    }
+                }else{
+                    getAdapter().addElement(0,movieItem);
+                }
             }
 
             if(movies.size() > 0){
