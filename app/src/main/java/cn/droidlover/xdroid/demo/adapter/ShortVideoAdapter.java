@@ -20,6 +20,7 @@ import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.kit.ThumbLoad;
+import cn.droidlover.xdroid.demo.ui.MovieInfoActivity;
 import cn.droidlover.xdroid.demo.ui.PlayerActivity;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
@@ -69,7 +70,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
 
         holder.title.setText(item.getTitle());
         holder.duration.setText(item.getFormatDuration());
-
+        holder.value.setText(item.getValue());
         if(item.getHasPlay()){
             holder.title.setTextColor(Color.argb(250,200, 200, 200));
             holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
@@ -100,6 +101,17 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         holder.enshrineBtn.setOnClickListener(new ImageButton.OnClickListener(){
             public void onClick(View v) {
                 ((ImageButton)v).setImageResource(R.mipmap.a6e);
+            }
+        });
+
+        holder.detailInfoLabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent((Activity)context, MovieInfoActivity.class);
+                if(intent != null){
+                    intent.putExtra("MovieID", item.getMovie_id());
+                    context.startActivity(intent);
+                }
             }
         });
     }
@@ -144,6 +156,10 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         ImageButton enshrineBtn;
         @BindView(R.id.value_icon)
         ImageView valueIcon;
+        @BindView(R.id.value_text)
+        TextView value;
+        @BindView(R.id.detail_info_label)
+        View detailInfoLabel;
 
         public ViewHolder(View itemView) {
             super(itemView);

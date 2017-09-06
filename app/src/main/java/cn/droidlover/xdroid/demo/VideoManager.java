@@ -15,6 +15,7 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cn.droidlover.qtcontentlayout.QTContentLayout;
 import cn.droidlover.xdroid.demo.kit.AppKit;
@@ -30,9 +31,10 @@ import okhttp3.Call;
 
 public class VideoManager {
 
-    private DBManager mDbManager        =  null;
-    private User      mUser             =  null;
-    private int       mReConnectNum     =  0;
+    private DBManager mDbManager                =  null;
+    private User      mUser                     =  null;
+    private int       mReConnectNum             =  0;
+    private Map<String,MovieInfo.Item>  mMovies  = new HashMap<String,MovieInfo.Item>();
 
     private VideoManager(){
         mDbManager = new DBManager(App.getContext());
@@ -94,9 +96,24 @@ public class VideoManager {
         return true;
     }
 
+    public MovieInfo.Item getMovieInfoItem(String movieId){
+        if(mMovies.containsKey(movieId)){
+            return mMovies.get(movieId);
+        }
+        return  null;
+    }
+
     private boolean getVideosFromLocal(final int videoType,final JsonCallback<MovieInfo> callback){
         Log.i(App.TAG,"getVideosFromLocal");
         List<MovieInfo.Item> movies = mDbManager.query("" + videoType);
+
+        for(int i = 0;i < movies.size();i++){
+            MovieInfo.Item item = movies.get(i);
+            if(!mMovies.containsKey(item.getMovie_id())){
+                mMovies.put(item.getMovie_id(),item);
+            }
+        }
+
         MovieInfo movieInfo = new MovieInfo();
         movieInfo.setResults(movies);
         callback.onResponse(movieInfo,0);
@@ -122,6 +139,14 @@ public class VideoManager {
             public void onResponse(MovieInfo response, int id) {
                 if(response != null && !response.isError()){
                     List<MovieInfo.Item> movies = mDbManager.add(response.getResults());
+
+                    for(int i = 0;i < movies.size();i++){
+                        MovieInfo.Item item = movies.get(i);
+                        if(!mMovies.containsKey(item.getMovie_id())){
+                            mMovies.put(item.getMovie_id(),item);
+                        }
+                    }
+
                     MovieInfo movieInfo = new MovieInfo();
                     movieInfo.setResults(movies);
                     callback.onResponse(movieInfo,id);
