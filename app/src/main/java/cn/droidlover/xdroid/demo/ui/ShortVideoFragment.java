@@ -4,8 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import com.zhy.http.okhttp.OkHttpUtils;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,14 +16,13 @@ import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.adapter.ShortVideoAdapter;
-import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xrecyclerview.RecyclerItemCallback;
 import cn.droidlover.xrecyclerview.XRecyclerContentLayout;
 import cn.droidlover.xrecyclerview.XRecyclerView;
 import okhttp3.Call;
-import java.util.HashMap;
+
 import java.util.Map;
 
 /**
@@ -45,7 +43,7 @@ public class ShortVideoFragment extends XFragment{
     private int mType = 0;
     private boolean mIsInit = false;
     private int maxId  = 0;
-    private Map<String,List<MovieInfo.Item> >sets = new HashMap<String,List<MovieInfo.Item>>();
+    private Map<String,List<MovieInfo.Item> > mMovieSets = new HashMap<String,List<MovieInfo.Item>>();
 
     private JsonCallback<MovieInfo>  mCallback =   new JsonCallback<MovieInfo>() {
         @Override
@@ -64,11 +62,14 @@ public class ShortVideoFragment extends XFragment{
 
                 MovieInfo.Item movieItem = movies.get(i);
                 if(movieItem.getSet_name() != null && movieItem.getSet_name().length() > 0){
-                    if(sets.containsKey(movieItem.getSet_name())){
-                        List<MovieInfo.Item>movieItems = sets.get(movieItem.getSet_name());
+                    if(mMovieSets.containsKey(movieItem.getSet_name())){
+                        List<MovieInfo.Item>movieItems = mMovieSets.get(movieItem.getSet_name());
                         movieItems.add(movieItem);
                     }else{
                         getAdapter().addElement(0,movieItem);
+                        List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
+                        movieItems.add(movieItem);
+                        mMovieSets.put(movieItem.getSet_name(),movieItems);
                     }
                 }else{
                     getAdapter().addElement(0,movieItem);

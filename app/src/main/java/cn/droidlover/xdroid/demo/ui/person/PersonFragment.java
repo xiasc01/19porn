@@ -103,7 +103,12 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
             if(mType == 0){
                 mAccount.setItemValue(response);
             }else{
-                int unVerifyCoin = Integer.parseInt(response);
+                int unVerifyCoin = 0;
+                try {
+                    unVerifyCoin = Integer.parseInt(response);
+                }catch (Exception e){
+                    unVerifyCoin = 0;
+                }
                 if(unVerifyCoin != 0){
                     mAccount.setItemValue2("(" + response + ")");
                 }else{
@@ -129,7 +134,13 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         mAccount.setOnClickListener(this);
         mAccount.setLineVisible(View.INVISIBLE);
         mAccount.setItemValue(User.getInstance().getCoin(null));
-        int unVerifyCoin = Integer.parseInt(User.getInstance().getUnVerifyCoin(null));
+        int unVerifyCoin = 0;
+        try {
+            unVerifyCoin = Integer.parseInt(User.getInstance().getUnVerifyCoin(null));
+        }catch (Exception e){
+            unVerifyCoin = 0;
+        }
+
         if(unVerifyCoin != 0){
             mAccount.setItemValue2("(" + unVerifyCoin + ")");
         }else{

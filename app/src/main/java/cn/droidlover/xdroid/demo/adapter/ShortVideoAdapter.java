@@ -64,6 +64,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             thumbSize = Integer.parseInt(item.getThumb_size());
         }
 
+        Log.i(App.TAG,"thumb url = " + item.getThumb_url());
         ThumbLoad.getInstance().loadImage(holder.ivGirl,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
 
         holder.title.setText(item.getTitle());
