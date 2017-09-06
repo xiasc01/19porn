@@ -57,7 +57,7 @@
     </style>
 
     <!-- 下圆角样式 -->
-    <style name="bottom_layout"  parent="base_layout">
+    <style name="bottom_layout" parent="base_layout">
         <item name="android:background">@drawable/bottom_layout_selector</item>
     </style>
 
@@ -65,7 +65,6 @@
     <style name="single_layout" parent="base_layout">
         <item name="android:background">@drawable/single_layout_selector</item>
     </style>
-
 
 
     <!-- textview样式 -->
@@ -98,9 +97,15 @@
     <style name="AppThemeHolo.NoActionBar" parent="@android:style/Theme.Holo.NoActionBar" />
 
     <style name="FullHeightDialog">
-    　　parent="android:style/Theme.Dialog">
-    　　<item name="android:windowNoTitle">true</item>
-    　</style>
+        　　parent="android:style/Theme.Dialog">
+        　　
+        <item name="android:windowNoTitle">true</item>
+        　
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 
 </resources>
