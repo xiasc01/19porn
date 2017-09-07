@@ -1,14 +1,17 @@
 package cn.droidlover.xdroid.demo.adapter;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.List;
@@ -50,23 +53,34 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
     public void onBindViewHolder(ViewHolder holder, int position) {
         final  MovieInfo.Item item = data.get(position);
 
+        if(item.getSet_name() != null && item.getSet_name().length() > 0){
+            holder.mulItemLayout.setVisibility(View.VISIBLE);
+            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)holder.mulItemLayout.getLayoutParams();
+            layoutParams.width = 1080;
+            layoutParams.height = 9 * layoutParams.width / 16;
+            holder.mulItemLayout.setLayoutParams(layoutParams);
+            holder.singleItemLayout.setVisibility(View.GONE);
+            List<MovieInfo.Item> movies = VideoManager.getInstance().getMovieSet(item.getSet_name());
+            if(movies != null){
+                for (int i = 0;i < movies.size() && i < 4;i++){
+                    MovieInfo.Item subItem = movies.get(i);
+                    if(i == 0) setImage(subItem,holder.ivThumb1);
+                    if(i == 1) setImage(subItem,holder.ivThumb2);
+                    if(i == 2) setImage(subItem,holder.ivThumb3);
+                    if(i == 3) setImage(subItem,holder.ivThumb4);
+                }
+            }
+            return;
+        }
+
+        holder.singleItemLayout.setVisibility(View.VISIBLE);
+        holder.mulItemLayout.setVisibility(View.GONE);
         if(item.getMovie_id() == null || item.getThumb_key() == null){
             Log.e(App.TAG,"onBindViewHolder movie is null");
             return;
         }
 
-        int thumbPos = 0;
-        if(item.getThumb_pos() != null){
-            thumbPos = Integer.parseInt(item.getThumb_pos());
-        }
-
-        int thumbSize = 0;
-        if(item.getThumb_size() != null){
-            thumbSize = Integer.parseInt(item.getThumb_size());
-        }
-
-        Log.i(App.TAG,"thumb url = " + item.getThumb_url());
-        ThumbLoad.getInstance().loadImage(holder.ivGirl,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
+        setImage(item,holder.ivGirl);
 
         holder.title.setText(item.getTitle());
         holder.duration.setText(item.getFormatDuration());
@@ -140,7 +154,27 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
 
     }
 
+    private void setImage(MovieInfo.Item item,ImageView imageView){
+        int thumbPos = 0;
+        if(item.getThumb_pos() != null){
+            thumbPos = Integer.parseInt(item.getThumb_pos());
+        }
+
+        int thumbSize = 0;
+        if(item.getThumb_size() != null){
+            thumbSize = Integer.parseInt(item.getThumb_size());
+        }
+
+        Log.i(App.TAG,"thumb url = " + item.getThumb_url());
+        ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.mul_item_layout)
+        View mulItemLayout;
+
+        @BindView(R.id.single_item_layout)
+        View singleItemLayout;
 
         @BindView(R.id.iv_girl)
         ImageView ivGirl;
@@ -160,6 +194,17 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         TextView value;
         @BindView(R.id.detail_info_label)
         View detailInfoLabel;
+
+
+        @BindView(R.id.ivThumb1)
+        ImageView ivThumb1;
+        @BindView(R.id.ivThumb2)
+        ImageView ivThumb2;
+        @BindView(R.id.ivThumb3)
+        ImageView ivThumb3;
+        @BindView(R.id.ivThumb4)
+        ImageView ivThumb4;
+
 
         public ViewHolder(View itemView) {
             super(itemView);

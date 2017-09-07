@@ -33,7 +33,6 @@ public class ShortVideoFragment extends XFragment{
 
     ShortVideoAdapter mAdapter;
 
-
     @BindView(R.id.contentLayout)
     XRecyclerContentLayout contentLayout;
 
@@ -59,21 +58,8 @@ public class ShortVideoFragment extends XFragment{
             List<MovieInfo.Item> movies = response.getResults();
 
             for(int i = 0;i < movies.size();i++){
-
                 MovieInfo.Item movieItem = movies.get(i);
-                if(movieItem.getSet_name() != null && movieItem.getSet_name().length() > 0){
-                    if(mMovieSets.containsKey(movieItem.getSet_name())){
-                        List<MovieInfo.Item>movieItems = mMovieSets.get(movieItem.getSet_name());
-                        movieItems.add(movieItem);
-                    }else{
-                        getAdapter().addElement(0,movieItem);
-                        List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
-                        movieItems.add(movieItem);
-                        mMovieSets.put(movieItem.getSet_name(),movieItems);
-                    }
-                }else{
-                    getAdapter().addElement(0,movieItem);
-                }
+                getAdapter().addElement(0,movieItem);
             }
 
             if(movies.size() > 0){
@@ -86,13 +72,13 @@ public class ShortVideoFragment extends XFragment{
                 maxId = Integer.parseInt(movies.get(movies.size() - 1).getId());
             }
 
-               // contentLayout.getRecyclerView().setPage(2, MAX_PAGE);
+           // contentLayout.getRecyclerView().setPage(2, MAX_PAGE);
 
-                    /*if (getAdapter().getItemCount() < 1) {
-                        contentLayout.showEmpty();
-                        return;
-                    }*/
-            //}
+                /*if (getAdapter().getItemCount() < 1) {
+                    contentLayout.showEmpty();
+                    return;
+                }*/
+        //}
         }
     };
 

@@ -1,5 +1,6 @@
 package cn.droidlover.xdroid.demo;
 
+import android.app.LauncherActivity;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
@@ -29,17 +30,28 @@ import okhttp3.Call;
  * Created by Administrator on 2017/5/28 0028.
  */
 
-public class VideoManager {
+public class VideoManager extends Thread {
 
-    private DBManager mDbManager                =  null;
-    private User      mUser                     =  null;
-    private int       mReConnectNum             =  0;
-    private Map<String,MovieInfo.Item>  mMovies  = new HashMap<String,MovieInfo.Item>();
+    private DBManager mDbManager                           =  null;
+    private User      mUser                                =  null;
+    private int       mReConnectNum                        =  0;
+    private Map<String,MovieInfo.Item>  mMovies            = new HashMap<String,MovieInfo.Item>();
+    private Map<String,List<MovieInfo.Item> > mMovieSets   = new HashMap<String,List<MovieInfo.Item>>();
+    private Map<String ,List<MovieInfo.Item> > mTypeMovies = new HashMap<String,List<MovieInfo.Item> >();
+    private int mCurrentType   = 0;
+    private int mCurrentPos = 0;
+    private boolean mStopDecodeThumb = false;
 
     private VideoManager(){
         mDbManager = new DBManager(App.getContext());
         mUser      = User.getInstance();
+        this.start();
     };
+
+    @Override
+    public void run() {
+
+    }
 
     public void getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
         if(id == -1){
@@ -103,21 +115,53 @@ public class VideoManager {
         return  null;
     }
 
+    public List<MovieInfo.Item> getMovieSet(String setName){
+        if(mMovieSets.containsKey(setName)){
+            return mMovieSets.get(setName);
+        }
+        return null;
+    }
+
     private boolean getVideosFromLocal(final int videoType,final JsonCallback<MovieInfo> callback){
         Log.i(App.TAG,"getVideosFromLocal");
         List<MovieInfo.Item> movies = mDbManager.query("" + videoType);
+        List<MovieInfo.Item> movie2s = new ArrayList<MovieInfo.Item>();
+
+        List<MovieInfo.Item> movie3s = null;
+        if(mTypeMovies.containsKey(videoType + "")){
+            movie3s = mTypeMovies.get(videoType + "");
+        }else{
+            movie3s = new ArrayList<MovieInfo.Item>();
+            mTypeMovies.put(videoType + "",movie3s);
+        }
 
         for(int i = 0;i < movies.size();i++){
             MovieInfo.Item item = movies.get(i);
             if(!mMovies.containsKey(item.getMovie_id())){
                 mMovies.put(item.getMovie_id(),item);
             }
+
+            if(item.getSet_name() != null && item.getSet_name().length() > 0){
+                if(mMovieSets.containsKey(item.getSet_name())){
+                    List<MovieInfo.Item>movieItems = mMovieSets.get(item.getSet_name());
+                    movieItems.add(item);
+                }else{
+                    movie2s.add(item);
+                    movie3s.add(item);
+                    List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
+                    movieItems.add(item);
+                    mMovieSets.put(item.getSet_name(),movieItems);
+                }
+            }else{
+                movie2s.add(item);
+                movie3s.add(item);
+            }
         }
 
         MovieInfo movieInfo = new MovieInfo();
-        movieInfo.setResults(movies);
+        movieInfo.setResults(movie2s);
         callback.onResponse(movieInfo,0);
-        return movies.size() > 0;
+        return movie2s.size() > 0;
     }
 
     private void getVideosFromServer(final int videoType, final int id_index, final JsonCallback<MovieInfo> callback){
@@ -139,16 +183,41 @@ public class VideoManager {
             public void onResponse(MovieInfo response, int id) {
                 if(response != null && !response.isError()){
                     List<MovieInfo.Item> movies = mDbManager.add(response.getResults());
+                    List<MovieInfo.Item> movie2s = new ArrayList<MovieInfo.Item>();
+
+                    List<MovieInfo.Item> movie3s = null;
+                    if(mTypeMovies.containsKey(videoType + "")){
+                        movie3s = mTypeMovies.get(videoType + "");
+                    }else{
+                        movie3s = new ArrayList<MovieInfo.Item>();
+                        mTypeMovies.put(videoType + "",movie3s);
+                    }
 
                     for(int i = 0;i < movies.size();i++){
                         MovieInfo.Item item = movies.get(i);
                         if(!mMovies.containsKey(item.getMovie_id())){
                             mMovies.put(item.getMovie_id(),item);
                         }
+
+                        if(item.getSet_name() != null && item.getSet_name().length() > 0){
+                            if(mMovieSets.containsKey(item.getSet_name())){
+                                List<MovieInfo.Item>movieItems = mMovieSets.get(item.getSet_name());
+                                movieItems.add(item);
+                            }else{
+                                movie2s.add(item);
+                                movie3s.add(item);
+                                List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
+                                movieItems.add(item);
+                                mMovieSets.put(item.getSet_name(),movieItems);
+                            }
+                        }else{
+                            movie2s.add(item);
+                            movie3s.add(item);
+                        }
                     }
 
                     MovieInfo movieInfo = new MovieInfo();
-                    movieInfo.setResults(movies);
+                    movieInfo.setResults(movie2s);
                     callback.onResponse(movieInfo,id);
                 }
                 mReConnectNum = 0;
@@ -175,7 +244,8 @@ public class VideoManager {
 
     public static VideoManager getInstance(){
         if(mVideoManager == null){
-            return new VideoManager();
+            mVideoManager = new VideoManager();
+            return mVideoManager;
         }
         return mVideoManager;
     }
@@ -191,7 +261,7 @@ public class VideoManager {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS video_info" +
-                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR, type VARCHAR,duration VARCHAR, value VARCHAR,thumb_key VARCHAR)");
+                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR, type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR)");
         }
 
         //如果DATABASE_VERSION值被改为2,系统发现现有数据库版本不同,即会调用onUpgrade
@@ -217,7 +287,8 @@ public class VideoManager {
                 for (MovieInfo.Item movie : movies) {
                     Cursor c = queryMovie(movie.getMovie_id());
                     if(c.getCount() == 0){
-                        db.execSQL("INSERT INTO video_info VALUES(?,?, ?, ?, ?, ?, ?)", new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getThumb_key()});
+                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key()});
                         results.add(movie);
                     }
                 }
@@ -243,6 +314,10 @@ public class VideoManager {
                 movie.setDuration(c.getString(c.getColumnIndex("duration")));
                 movie.setValue(c.getString(c.getColumnIndex("value")));
                 movie.setThumb_key(c.getString(c.getColumnIndex("thumb_key")));
+                movie.setThumb_size(c.getString(c.getColumnIndex("thumb_size")));
+                movie.setThumb_pos(c.getString(c.getColumnIndex("thumb_pos")));
+                movie.setThumb_url(c.getString(c.getColumnIndex("thumb_path")));
+                movie.setSet_name(c.getString(c.getColumnIndex("set_name")));
                 movies.add(movie);
             }
             c.close();
