@@ -20,6 +20,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import cn.droidlover.xdroid.cache.MemoryCache;
 import cn.droidlover.xdroid.demo.App;
@@ -37,6 +40,7 @@ public class ThumbLoad {
 
     private String      mThumbCacheDir   = Environment.getExternalStorageDirectory() + "/droid/thumb/";
     private String      mMovieID         = null;
+    //private Queue<Bitmap> bitmaps        = new ArrayBlockingQueue<Bitmap>()
 
     private ThumbLoad() {
     }

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -38,9 +39,14 @@ public class VideoManager extends Thread {
     private Map<String,MovieInfo.Item>  mMovies            = new HashMap<String,MovieInfo.Item>();
     private Map<String,List<MovieInfo.Item> > mMovieSets   = new HashMap<String,List<MovieInfo.Item>>();
     private Map<String ,List<MovieInfo.Item> > mTypeMovies = new HashMap<String,List<MovieInfo.Item> >();
+
     private int mCurrentType   = 0;
-    private int mCurrentPos = 0;
+    private int mLastType      = 0;
+    private int mCurrentPos    = 0;
+    private int mLastPos       = 0;
+
     private boolean mStopDecodeThumb = false;
+    private Map<String,Bitmap>    mMovieThumbCaches         = new HashMap<String,Bitmap>();
 
     private VideoManager(){
         mDbManager = new DBManager(App.getContext());
@@ -50,8 +56,40 @@ public class VideoManager extends Thread {
 
     @Override
     public void run() {
+        while (!mStopDecodeThumb){
+            synchronized (mMovieThumbCaches){
+                if(mCurrentType != mLastType){
+                    mMovieThumbCaches.clear();
+                    mLastType = mCurrentType;
+                }
 
+                if(!mTypeMovies.containsKey(mCurrentType + "")){
+                    Log.e(App.TAG,"mTypeMovies do not contains key " + mCurrentType);
+                    try {Thread.sleep(10);} catch (InterruptedException e) {e.printStackTrace();}
+                    continue;
+                }
+
+                List<MovieInfo.Item> movies = mTypeMovies.get(mCurrentType + "");
+                if(mCurrentPos == mLastPos){
+                    if(mMovieThumbCaches.size() > 31 || mMovieThumbCaches.size() == movies.size()){
+                        try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
+                        continue;
+                    }
+                }
+
+                mLastPos = mCurrentPos;
+                int pos = movies.size() - mCurrentPos;
+                for(int i = 0;i < 16;i++){
+                    int leftPos  = pos - i;
+                    int rightPos = pos + i;
+                    //if(leftPos)
+                    //MovieInfo.Item leftItem =
+                }
+            }
+        }
     }
+
+
 
     public void getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
         if(id == -1){
