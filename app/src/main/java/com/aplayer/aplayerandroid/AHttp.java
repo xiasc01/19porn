@@ -1017,4 +1017,6 @@ public class AHttp
 		Log.i(TAG, "desDecrypt streampos = " + streamPos + " size = " + size);
 		return desReadByte;
 	}
+	private native int    native_dec_decrypt(ByteBuffer in,ByteBuffer out,int objid);
+	private native int    native_dec_set_key(ByteBuffer code,int objid);
 }

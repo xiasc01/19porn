@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
@@ -21,6 +22,7 @@ import java.util.Map;
 
 import cn.droidlover.qtcontentlayout.QTContentLayout;
 import cn.droidlover.xdroid.demo.kit.AppKit;
+import cn.droidlover.xdroid.demo.kit.ThumbLoad;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.net.NetApi;
@@ -39,57 +41,128 @@ public class VideoManager extends Thread {
     private Map<String,MovieInfo.Item>  mMovies            = new HashMap<String,MovieInfo.Item>();
     private Map<String,List<MovieInfo.Item> > mMovieSets   = new HashMap<String,List<MovieInfo.Item>>();
     private Map<String ,List<MovieInfo.Item> > mTypeMovies = new HashMap<String,List<MovieInfo.Item> >();
+    private Map<String,ImageView>  mThumbImageView         = new HashMap<String,ImageView>();
 
-    private int mCurrentType   = 0;
+    private String mCurrentType   = "0";
     private int mLastType      = 0;
     private int mCurrentPos    = 0;
     private int mLastPos       = 0;
 
     private boolean mStopDecodeThumb = false;
-    private Map<String,Bitmap>    mMovieThumbCaches         = new HashMap<String,Bitmap>();
+    private Map<String,ThumbCache>    mMovieThumbCaches         = new HashMap<String,ThumbCache>();
+
+    class ThumbCache{
+        Bitmap  bitmap;
+        String  type;
+        int     pos;
+    }
 
     private VideoManager(){
         mDbManager = new DBManager(App.getContext());
         mUser      = User.getInstance();
-        this.start();
+        //this.start();
     };
 
     @Override
     public void run() {
         while (!mStopDecodeThumb){
+            Log.i(App.TAG,"try decoder thumb once");
+            try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
             synchronized (mMovieThumbCaches){
-                if(mCurrentType != mLastType){
-                    mMovieThumbCaches.clear();
-                    mLastType = mCurrentType;
-                }
-
-                if(!mTypeMovies.containsKey(mCurrentType + "")){
+                if(!mTypeMovies.containsKey(mCurrentType)){
                     Log.e(App.TAG,"mTypeMovies do not contains key " + mCurrentType);
                     try {Thread.sleep(10);} catch (InterruptedException e) {e.printStackTrace();}
                     continue;
                 }
 
-                List<MovieInfo.Item> movies = mTypeMovies.get(mCurrentType + "");
-                if(mCurrentPos == mLastPos){
-                    if(mMovieThumbCaches.size() > 31 || mMovieThumbCaches.size() == movies.size()){
-                        try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
-                        continue;
+                List<MovieInfo.Item> movies = mTypeMovies.get(mCurrentType);
+                int pos = movies.size() - mCurrentPos - 1;
+
+                if(mMovieThumbCaches.size() > 31){
+                    for (String key : mMovieThumbCaches.keySet()) {
+                        ThumbCache thumbCache = mMovieThumbCaches.get(key);
+                        boolean needRecycle = false;
+                        if(!thumbCache.type.equals(mCurrentType) ){
+                            needRecycle = true;
+                        }
+
+                        if(!needRecycle && thumbCache.pos > pos + 15 && thumbCache.pos < pos - 15){
+                            needRecycle = true;
+                        }
+
+                        if(needRecycle){
+                            thumbCache = mMovieThumbCaches.remove(key);
+                            if(!thumbCache.bitmap.isRecycled()){
+                                thumbCache.bitmap.recycle();
+                            }
+                            break;
+                        }
                     }
                 }
 
-                mLastPos = mCurrentPos;
-                int pos = movies.size() - mCurrentPos;
+                boolean doDecodeThumb = false;
                 for(int i = 0;i < 16;i++){
-                    int leftPos  = pos - i;
-                    int rightPos = pos + i;
-                    //if(leftPos)
-                    //MovieInfo.Item leftItem =
+                    int curPos  = pos - i;
+                    MovieInfo.Item item = null;
+
+                    if(curPos >= 0 && curPos < movies.size()){
+                        item = movies.get(curPos);
+                        if(item != null){
+                            if(!mMovieThumbCaches.containsKey(item.getMovie_id())){
+                                doDecodeThumb = true;
+                            }
+                        }
+                    }
+
+                    if(!doDecodeThumb){
+                        curPos = pos + i;
+                        if(curPos >= 0 && curPos < movies.size()){
+                            item = movies.get(curPos);
+                            if(item != null){
+                                if(!mMovieThumbCaches.containsKey(item.getMovie_id())){
+                                    doDecodeThumb = true;
+                                }
+                            }
+                        }
+                    }
+
+
+
+                    if(doDecodeThumb){
+                        Bitmap bitmap = ThumbLoad.getInstance().getThumb(item.getMovie_id());
+                        ThumbCache thumbCache = new ThumbCache();
+                        thumbCache.bitmap  = bitmap;
+                        thumbCache.pos      = curPos;
+                        thumbCache.type     = mCurrentType;
+                        mMovieThumbCaches.put(item.getMovie_id(),thumbCache);
+
+                        if(item.getSet_name() != null && item.getSet_name().length() > 0){
+                            List<MovieInfo.Item> movieSets = mMovieSets.get(item.getSet_name());
+                            for(int j = 1;j < 4 && j < movieSets.size();j++){
+                                MovieInfo.Item itemSet = movieSets.get(j);
+
+                                bitmap = ThumbLoad.getInstance().getThumb(itemSet.getMovie_id());
+                                thumbCache = new ThumbCache();
+                                thumbCache.bitmap  = bitmap;
+                                thumbCache.pos      = curPos;
+                                thumbCache.type     = mCurrentType;
+                                mMovieThumbCaches.put(itemSet.getMovie_id(),thumbCache);
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if(!doDecodeThumb){
+                    try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
+                    continue;
+                }else{
+                    try {Thread.sleep(10);} catch (InterruptedException e) {e.printStackTrace();}
+                    continue;
                 }
             }
         }
     }
-
-
 
     public void getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
         if(id == -1){
@@ -158,6 +231,19 @@ public class VideoManager extends Thread {
             return mMovieSets.get(setName);
         }
         return null;
+    }
+
+    public void setThumbToImageView(String movieId,String type, int pos, ImageView imageView){
+        Log.i(App.TAG,"setThumbToImageView enter");
+        //synchronized (mMovieThumbCaches){
+            mCurrentPos   = pos;
+            mCurrentType  = type;
+            if(mMovieThumbCaches.containsKey(movieId)){
+                ThumbCache thumbCache = mMovieThumbCaches.get(movieId);
+                 imageView.setImageBitmap(thumbCache.bitmap);
+            }
+       // }
+        Log.i(App.TAG,"setThumbToImageView leave");
     }
 
     private boolean getVideosFromLocal(final int videoType,final JsonCallback<MovieInfo> callback){
@@ -356,6 +442,7 @@ public class VideoManager extends Thread {
                 movie.setThumb_pos(c.getString(c.getColumnIndex("thumb_pos")));
                 movie.setThumb_url(c.getString(c.getColumnIndex("thumb_path")));
                 movie.setSet_name(c.getString(c.getColumnIndex("set_name")));
+                movie.setType(c.getString(c.getColumnIndex("type")));
                 movies.add(movie);
             }
             c.close();

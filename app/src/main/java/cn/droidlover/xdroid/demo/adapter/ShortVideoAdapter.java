@@ -54,7 +54,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         final  MovieInfo.Item item = data.get(position);
 
         if(item.getSet_name() != null && item.getSet_name().length() > 0){
-            holder.mulItemLayout.setVisibility(View.VISIBLE);
+            /*holder.mulItemLayout.setVisibility(View.VISIBLE);
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)holder.mulItemLayout.getLayoutParams();
             layoutParams.width = 1080;
             layoutParams.height = 9 * layoutParams.width / 16;
@@ -69,7 +69,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     if(i == 2) setImage(subItem,holder.ivThumb3);
                     if(i == 3) setImage(subItem,holder.ivThumb4);
                 }
-            }
+            }*/
             return;
         }
 
@@ -81,6 +81,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         }
 
         setImage(item,holder.ivGirl);
+        //VideoManager.getInstance().setThumbToImageView(item.getMovie_id(),item.getType(),position,holder.ivGirl);
 
         holder.title.setText(item.getTitle());
         holder.duration.setText(item.getFormatDuration());
