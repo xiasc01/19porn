@@ -8,6 +8,8 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -28,6 +30,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import cn.droidlover.xdroid.cache.MemoryCache;
 import cn.droidlover.xdroid.demo.App;
+import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import okhttp3.Call;
@@ -43,6 +46,21 @@ public class ThumbLoad {
     private static final int headEncrySize = 1024;
     private static final int segmentSize = 4096;
     private String      mThumbCacheDir   = Environment.getExternalStorageDirectory() + "/droid/thumb/";
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 1) {
+                BmpImage bmpImage = (BmpImage) msg.obj;
+                bmpImage.imageView.setImageBitmap(bmpImage.bitmap);
+            }
+        }
+    };
+
+    private class BmpImage{
+        public  Bitmap bitmap;
+        public  ImageView imageView;
+    }
 
     private ThumbLoad() {
     }
@@ -165,17 +183,24 @@ public class ThumbLoad {
             return false;
         }
 
+        final Message msg = new Message();
+        msg.what = 1;
+        final BmpImage bmpImage = new BmpImage();
+        msg.obj = bmpImage;
+
         MemoryCache memoryCache = MemoryCache.getInstance();
         if(memoryCache.contains(movieID)){
-            byte[] thumbData = (byte[]) memoryCache.get(movieID);
+            final byte[] thumbData = (byte[]) memoryCache.get(movieID);
             Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
-            imageView.setImageBitmap(bitmap);
+            bmpImage.bitmap = bitmap;
+            bmpImage.imageView = imageView;
+            handler.sendMessage(msg);
             return true;
         }
 
-        String thumbName     = movieID + ".thumb";
-        String thumbPathName = mThumbCacheDir + thumbName;
 
+        String thumbName     = movieID + ".jpg";
+        String thumbPathName = mThumbCacheDir + thumbName;
         File file = new File(thumbPathName);
 
         if(file.exists()){
@@ -210,11 +235,12 @@ public class ThumbLoad {
             }
 
             if(thumbData != null){
-                memoryCache.put(movieID,thumbData);
                 Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
-
                 if(bitmap != null){
-                    imageView.setImageBitmap(bitmap);
+                    memoryCache.put(movieID,thumbData);
+                    bmpImage.bitmap = bitmap;
+                    bmpImage.imageView = imageView;
+                    handler.sendMessage(msg);
                 }
             }
         }else{
@@ -244,11 +270,14 @@ public class ThumbLoad {
                         }
 
                         Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
-                        imageView.setImageBitmap(bitmap);
+                        bmpImage.bitmap = bitmap;
+                        bmpImage.imageView = imageView;
+                        handler.sendMessage(msg);
                     }
                 }
 
                 public void onError(Call call, Exception e, int id){
+                    e.printStackTrace();
                 }
             });
         }

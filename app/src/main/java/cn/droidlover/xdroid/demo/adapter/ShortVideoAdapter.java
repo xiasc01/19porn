@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -150,19 +151,34 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
 
     }
 
-    private void setImage(MovieInfo.Item item,ImageView imageView){
-        int thumbPos = 0;
-        if(item.getThumb_pos() != null){
-            thumbPos = Integer.parseInt(item.getThumb_pos());
+    private void setImage(final MovieInfo.Item item,final ImageView imageView){
+        if(ThumbLoad.getInstance() == null){
+            ThumbLoad.getInstance();
         }
 
-        int thumbSize = 0;
-        if(item.getThumb_size() != null){
-            thumbSize = Integer.parseInt(item.getThumb_size());
-        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int thumbPos = 0;
+                    if(item.getThumb_pos() != null){
+                        thumbPos = Integer.parseInt(item.getThumb_pos());
+                    }
 
-        Log.i(App.TAG,"thumb url = " + item.getThumb_url());
-        ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
+                    int thumbSize = 0;
+                    if(item.getThumb_size() != null){
+                        thumbSize = Integer.parseInt(item.getThumb_size());
+                    }
+
+                    ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        thread.start();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

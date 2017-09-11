@@ -178,7 +178,7 @@ public class VideoManager extends Thread {
         params.put("movie_id",movieId);
 
         for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
-            Log.i(App.TAG,"Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            Log.i(App.TAG,"modifyMovieInfo Key = " + entry.getKey() + ", Value = " + entry.getValue());
             params.put(entry.getKey(),entry.getValue());
         }
 
