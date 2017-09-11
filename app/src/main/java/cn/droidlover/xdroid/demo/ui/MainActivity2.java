@@ -22,6 +22,7 @@ import android.widget.RadioGroup;
 import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.person.PersonFragment;
 
@@ -99,6 +100,11 @@ public class MainActivity2 extends XActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 1){
             ((PersonFragment)personFragment).initUserData();
+        }
+        if(requestCode == 2){
+            if(MovieInfoActivity.modifyMovieInfos.size() > 0){
+                VideoManager.getInstance().modifyMovieInfo(MovieInfoActivity.movieId,MovieInfoActivity.modifyMovieInfos);
+            }
         }
     }
 }

@@ -40,12 +40,12 @@
             android:id="@+id/textView25"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="Title"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView26"
+        <EditText
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -204,4 +204,27 @@
             android:text="asdfsadfsadfsad" />
 
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="15dp"
+            android:text="取消" />
+
+        <Button
+            android:id="@+id/ok_btn"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:text="确定" />
+    </LinearLayout>
+
 </LinearLayout>

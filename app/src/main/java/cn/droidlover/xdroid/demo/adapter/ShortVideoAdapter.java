@@ -1,20 +1,15 @@
 package cn.droidlover.xdroid.demo.adapter;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import java.util.List;
 
 import butterknife.BindView;
 import cn.droidlover.xdroid.base.SimpleRecAdapter;
@@ -125,7 +120,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                 Intent intent = new Intent((Activity)context, MovieInfoActivity.class);
                 if(intent != null){
                     intent.putExtra("MovieID", item.getMovie_id());
-                    context.startActivity(intent);
+                    ((Activity) context).startActivityForResult(intent,2);
                 }
             }
         });

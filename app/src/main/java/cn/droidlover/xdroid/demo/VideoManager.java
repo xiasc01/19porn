@@ -1,16 +1,13 @@
 package cn.droidlover.xdroid.demo;
 
-import android.app.LauncherActivity;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.io.File;
@@ -20,13 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cn.droidlover.qtcontentlayout.QTContentLayout;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.kit.ThumbLoad;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.net.NetApi;
-import cn.droidlover.xdroid.kit.Kits;
+import cn.droidlover.xdroid.demo.ui.MovieInfoActivity;
 import okhttp3.Call;
 
 /**
@@ -173,6 +169,21 @@ public class VideoManager extends Thread {
         }else {
             getVideosFromServer(videoType,id,callback);
         }
+    }
+
+    public void modifyMovieInfo(String movieId, Map<String,String> modifyMovieInfos){
+        Log.i(App.TAG,"modifyMovieInfo enter");
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","modify_movie_info");
+        params.put("movie_id",movieId);
+
+        for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
+            Log.i(App.TAG,"Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            params.put(entry.getKey(),entry.getValue());
+        }
+
+
+        NetApi.invokeGet(params,null);
     }
 
     public boolean getPlayUrl(final String movieId, final User.GetPlayUrlCallback callback){
