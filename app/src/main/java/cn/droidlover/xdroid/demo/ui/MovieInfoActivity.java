@@ -28,6 +28,17 @@ public class MovieInfoActivity extends XActivity {
     TextView IDEdit;
     @BindView(R.id.title)
     EditText title;
+    @BindView(R.id.content)
+    EditText content;
+    @BindView(R.id.pic)
+    EditText pic;
+    @BindView(R.id.subtype)
+    EditText subType;
+    @BindView(R.id.value)
+    EditText value;
+    @BindView(R.id.grade)
+    EditText grade;
+
     @BindView(R.id.cancel_btn)
     Button cancelBtn;
     @BindView(R.id.ok_btn)
@@ -50,15 +61,9 @@ public class MovieInfoActivity extends XActivity {
 
         title.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override
             public void afterTextChanged(Editable s) {
                 if(modifyMovieInfos.containsKey("title")){
@@ -68,7 +73,75 @@ public class MovieInfoActivity extends XActivity {
             }
         });
 
+        content.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(modifyMovieInfos.containsKey("score")){
+                    modifyMovieInfos.remove("score");
+                }
+                modifyMovieInfos.put("score","" + s);
+            }
+        });
 
+        pic.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(modifyMovieInfos.containsKey("pic_score")){
+                    modifyMovieInfos.remove("pic_score");
+                }
+                modifyMovieInfos.put("pic_score","" + s);
+            }
+        });
+
+        subType.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(modifyMovieInfos.containsKey("sub_type1")){
+                    modifyMovieInfos.remove("sub_type1");
+                }
+                modifyMovieInfos.put("sub_type1","" + s);
+            }
+        });
+
+        value.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(modifyMovieInfos.containsKey("value")){
+                    modifyMovieInfos.remove("value");
+                }
+                modifyMovieInfos.put("value","" + s);
+            }
+        });
+
+        grade.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(modifyMovieInfos.containsKey("grade")){
+                    modifyMovieInfos.remove("grade");
+                }
+                modifyMovieInfos.put("grade","" + s);
+            }
+        });
 
 
         okBtn.setOnClickListener(new View.OnClickListener() {

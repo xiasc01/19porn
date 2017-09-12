@@ -36,6 +36,9 @@ public class MovieInfo extends BaseModel {
         private String type;
         private String set_name;
         private Boolean hasPlay = false;
+        private String  score;
+        private String  pic_score;
+        private String  sub_type1;
         //private
 
         public String getMovie_id(){
@@ -171,6 +174,30 @@ public class MovieInfo extends BaseModel {
 
         public void setSet_name(String set_name) {
             this.set_name = set_name;
+        }
+
+        public String getScore() {
+            return score;
+        }
+
+        public void setScore(String score) {
+            this.score = score;
+        }
+
+        public String getPic_score() {
+            return pic_score;
+        }
+
+        public void setPic_score(String pic_score) {
+            this.pic_score = pic_score;
+        }
+
+        public String getSub_type1() {
+            return sub_type1;
+        }
+
+        public void setSub_type1(String sub_type1) {
+            this.sub_type1 = sub_type1;
         }
     }
 }

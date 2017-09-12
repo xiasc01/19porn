@@ -179,6 +179,7 @@ public class ThumbLoad {
     }
 
     public boolean loadImage(final ImageView imageView,final String url,final int pos,final int size,final String key,final String movieID){
+        Log.i(App.TAG,"loadImage movie id = " + movieID);
         if(imageView == null || movieID == null){
             return false;
         }
@@ -189,17 +190,17 @@ public class ThumbLoad {
         msg.obj = bmpImage;
 
         MemoryCache memoryCache = MemoryCache.getInstance();
-        if(memoryCache.contains(movieID)){
+        /*if(memoryCache.contains(movieID)){
             final byte[] thumbData = (byte[]) memoryCache.get(movieID);
             Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
             bmpImage.bitmap = bitmap;
             bmpImage.imageView = imageView;
             handler.sendMessage(msg);
             return true;
-        }
+        }*/
 
 
-        String thumbName     = movieID + ".jpg";
+        String thumbName     = movieID + ".thumb";
         String thumbPathName = mThumbCacheDir + thumbName;
         File file = new File(thumbPathName);
 

@@ -65,12 +65,12 @@
             android:id="@+id/textView27"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="内容"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView28"
+        <EditText
+            android:id="@+id/content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -90,12 +90,12 @@
             android:id="@+id/textView29"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="画质"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView30"
+        <EditText
+            android:id="@+id/pic"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -115,12 +115,12 @@
             android:id="@+id/textView31"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="子类"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView32"
+        <EditText
+            android:id="@+id/subtype"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -140,12 +140,12 @@
             android:id="@+id/textView33"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="价值"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView34"
+        <EditText
+            android:id="@+id/value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -165,12 +165,12 @@
             android:id="@+id/textView35"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ID"
+            android:text="等级"
             android:layout_marginLeft="10dp"
             android:layout_weight="1"/>
 
-        <TextView
-            android:id="@+id/textView36"
+        <EditText
+            android:id="@+id/grade"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

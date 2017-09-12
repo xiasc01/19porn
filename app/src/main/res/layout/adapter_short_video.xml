@@ -150,7 +150,7 @@
                     android:text="自拍"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/label_content"
+                    android:id="@+id/label_sub_type"
                     android:textStyle="normal|bold"
                     android:textSize="12sp" />
 
@@ -158,13 +158,13 @@
                     android:text=" | "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView6" />
+                    android:id="@+id/detail_info_split_line1" />
 
                 <TextView
                     android:text="画质 8"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/label_pic_grade"
+                    android:id="@+id/label_pic_score"
                     android:textStyle="normal|bold"
                     android:textSize="12sp" />
 
@@ -172,13 +172,13 @@
                     android:text=" | "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView7" />
+                    android:id="@+id/detail_info_split_line2" />
 
                 <TextView
                     android:text="内容 7"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/label_content_grade"
+                    android:id="@+id/label_content_score"
                     android:textStyle="normal|bold"
                     android:textSize="12sp" />
 

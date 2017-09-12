@@ -82,6 +82,16 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         holder.title.setText(item.getTitle());
         holder.duration.setText(item.getFormatDuration());
         holder.value.setText(item.getValue());
+        holder.contentScore.setText("内容 " + item.getScore());
+        holder.picScore.setText("画质 " + item.getPic_score());
+        if(item.getSub_type1() != null && item.getSub_type1().length() > 0){
+            holder.subType.setText(item.getSub_type1());
+        }else{
+            holder.subType.setVisibility(View.GONE);
+            holder.splitLine1.setVisibility(View.GONE);
+        }
+
+
         if(item.getHasPlay()){
             holder.title.setTextColor(Color.argb(250,200, 200, 200));
             holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
@@ -206,6 +216,16 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         TextView value;
         @BindView(R.id.detail_info_label)
         View detailInfoLabel;
+        @BindView(R.id.label_content_score)
+        TextView contentScore;
+        @BindView(R.id.label_pic_score)
+        TextView picScore;
+        @BindView(R.id.label_sub_type)
+        TextView subType;
+        @BindView(R.id.detail_info_split_line1)
+        TextView splitLine1;
+
+
 
 
         @BindView(R.id.ivThumb1)
