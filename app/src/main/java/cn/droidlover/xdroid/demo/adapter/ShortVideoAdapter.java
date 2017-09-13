@@ -3,6 +3,7 @@ package cn.droidlover.xdroid.demo.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Message;
 import android.support.v7.widget.RecyclerView;
@@ -179,6 +180,11 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     if(item.getThumb_size() != null){
                         thumbSize = Integer.parseInt(item.getThumb_size());
                     }
+
+                    /*int width = AppKit.getScreenWidth();
+                    int height = width * 9 / 16;
+                    Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.ARGB_8888 );
+                    imageView.setImageBitmap(bitmap);*/
 
                     ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
 

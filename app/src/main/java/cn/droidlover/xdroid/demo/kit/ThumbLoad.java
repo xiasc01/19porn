@@ -1,5 +1,6 @@
 package cn.droidlover.xdroid.demo.kit;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -11,6 +12,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -53,6 +55,7 @@ public class ThumbLoad {
             if (msg.what == 1) {
                 BmpImage bmpImage = (BmpImage) msg.obj;
                 bmpImage.imageView.setImageBitmap(bmpImage.bitmap);
+                Log.i(App.TAG,"loadImage movie from msg id = " + bmpImage.movieId);
             }
         }
     };
@@ -60,6 +63,7 @@ public class ThumbLoad {
     private class BmpImage{
         public  Bitmap bitmap;
         public  ImageView imageView;
+        public  String movieId;
     }
 
     private ThumbLoad() {
@@ -180,8 +184,16 @@ public class ThumbLoad {
 
     public boolean loadImage(final ImageView imageView,final String url,final int pos,final int size,final String key,final String movieID){
         Log.i(App.TAG,"loadImage movie id = " + movieID);
-        if(imageView == null || movieID == null){
+        if(imageView == null){
             return false;
+        }
+
+        int width = AppKit.getScreenWidth();
+        int height = width * 9 / 16;
+        final Bitmap emptyBitmap = Bitmap.createBitmap( width, height, Bitmap.Config.ARGB_8888 );
+
+        if(movieID == null){
+            imageView.setImageBitmap(emptyBitmap);
         }
 
         final Message msg = new Message();
@@ -189,15 +201,15 @@ public class ThumbLoad {
         final BmpImage bmpImage = new BmpImage();
         msg.obj = bmpImage;
 
-        MemoryCache memoryCache = MemoryCache.getInstance();
-        /*if(memoryCache.contains(movieID)){
+        final MemoryCache memoryCache = MemoryCache.getInstance();
+        if(memoryCache.contains(movieID)){
             final byte[] thumbData = (byte[]) memoryCache.get(movieID);
             Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
             bmpImage.bitmap = bitmap;
             bmpImage.imageView = imageView;
             handler.sendMessage(msg);
             return true;
-        }*/
+        }
 
 
         String thumbName     = movieID + ".thumb";
@@ -232,6 +244,7 @@ public class ThumbLoad {
                 fins.read(thumbData);
             } catch (IOException e) {
                 e.printStackTrace();
+                imageView.setImageBitmap(emptyBitmap);
                 return  false;
             }
 
@@ -241,14 +254,19 @@ public class ThumbLoad {
                     memoryCache.put(movieID,thumbData);
                     bmpImage.bitmap = bitmap;
                     bmpImage.imageView = imageView;
+                    bmpImage.movieId  = movieID;
                     handler.sendMessage(msg);
+                }else{
+                    imageView.setImageBitmap(emptyBitmap);
                 }
             }
         }else{
             if(url == null || size == 0){
+                imageView.setImageBitmap(emptyBitmap);
                 return false;
             }
 
+            Log.i(App.TAG,"loadImage movie from net id = " + movieID);
             String range = "bytes=" + pos + "-" + (pos + size);
             HashMap<String,String> header = new HashMap<String,String>();
             header.put("Range",range);
@@ -261,7 +279,7 @@ public class ThumbLoad {
                 public void onResponse(File file, int id) {
                     byte[] thumbData = decodeThumb(file,key);
                     if(thumbData != null){
-
+                        memoryCache.put(movieID,thumbData);
                         try {
                             FileOutputStream fileOutputStream = new FileOutputStream(file,false);
                             fileOutputStream.write(thumbData);
@@ -273,11 +291,16 @@ public class ThumbLoad {
                         Bitmap bitmap = BitmapFactory.decodeByteArray(thumbData,0,thumbData.length);
                         bmpImage.bitmap = bitmap;
                         bmpImage.imageView = imageView;
+                        bmpImage.movieId  = movieID;
                         handler.sendMessage(msg);
+                    }else{
+                        imageView.setImageBitmap(emptyBitmap);
                     }
                 }
 
                 public void onError(Call call, Exception e, int id){
+                    Log.i(App.TAG,"loadImage movie from net fail id = " + movieID);
+                    imageView.setImageBitmap(emptyBitmap);
                     e.printStackTrace();
                 }
             });

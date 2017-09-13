@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -24,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.ui.MainActivity2;
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -165,6 +167,14 @@ public class AppKit {
 
     public static String getSqlLitePath(){
         return Environment.getExternalStorageDirectory().getAbsolutePath() + "/droid/database/";
+    }
+
+    public static int getScreenWidth(){
+        WindowManager manager = (WindowManager) App.getContext().getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(outMetrics);
+        int width = outMetrics.widthPixels;
+        return  width;
     }
 
     public static String getCurrentTime(){
