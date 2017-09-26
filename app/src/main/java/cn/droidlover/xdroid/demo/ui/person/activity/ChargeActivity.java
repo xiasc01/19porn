@@ -15,7 +15,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -45,13 +44,18 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
     @BindView(R.id.layout_charge)
     LinearLayout mLayoutCharge;
 
-    @BindView(R.id.notice)
-    TextView mNotice;
+    @BindView(R.id.notice1)
+    TextView mNotice1;
+
+    @BindView(R.id.notice2)
+    TextView mNotice2;
 
     @BindView(R.id.pay_progress)
     View mProgressView;
 
     Charge mCharge;
+    ChargeNotice mChargeNotice;
+    PayResult mPayResult;
 
     int mReConnect = 0;
     @Override
@@ -69,55 +73,26 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
 
     class Charge{
         public List<ChargeItem> chargeItems = new ArrayList<ChargeItem>();
-        public String notice;
-        public String payAccount;
+        String payAccount;
+    }
+
+    class ChargeNotice{
+        String notice;
+        int type;
+    }
+
+    class PayResult{
+        boolean state;
+        String  notice;
+        String  notice2;
     }
 
     @Override
     public void initData(Bundle savedInstanceState) {
         mHeadView = (CommonActivityHeadView)findViewById(R.id.head_view);
         mHeadView.setTitle("充值");
-
-        final Context chargeActivity = (Context)this;
-        String url = AppKit.getServerUrl();
-        JsonCallback<Charge> callback = new JsonCallback<Charge>(1 * 60 * 60 * 1000) {
-            @Override
-            public void onFail(Call call, Exception e, int id) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Charge response, int id) {
-                mCharge = response;
-
-                for (int i = 0;i < response.chargeItems.size();i++) {
-                    PersonItem item = new PersonItem(chargeActivity,null);
-                    ChargeItem chargeItems = response.chargeItems.get(i);
-                    item.setArrowVisible(View.GONE);
-                    item.setItemName(chargeItems.value);
-                    item.setItemValue("¥ " + chargeItems.money);
-                    item.setId(i);
-                    item.setOnClickListener((View.OnClickListener)chargeActivity);
-
-                    TextView valueText = (TextView) item.getChildView("item_value");
-                    valueText.setTextColor(Color.parseColor("#ff0000"));
-
-                    item.setItemNameImage(R.mipmap.pay_diamond);
-                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-                            LayoutParams.WRAP_CONTENT);
-                    mLayoutCharge.addView(item,params);
-                }
-                mNotice.setText(response.notice);
-            }
-        };
-
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("request_type","fetch_charge");
-
-        OkHttpUtils.get().url(url)
-                .params(params)
-                .build()
-                .execute(callback);
+        getChargeItem();
+        getNotice();
     }
 
     @Override
@@ -152,7 +127,7 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
 
                //String text   = "充值成功! 订单号435532 请尽快向支付宝" + mCharge.payAccount + "转账5.00 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
                 //String notice = "      您有一笔交易未支付，订单号435532 请尽快向支付宝" + mCharge.payAccount + "转账5.00 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                //mNotice.setText(notice);
+                //mNotice2.setText(notice);
 
                 inputDialog.dismiss();
 
@@ -181,6 +156,81 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
     @Override
     public int getLayoutId() {
         return R.layout.activity_charge;
+    }
+
+    private void getNotice(){
+        String url = AppKit.getServerUrl();
+        JsonCallback<ChargeNotice> callback = new JsonCallback<ChargeNotice>(1 * 60 * 60 * 1000) {
+            @Override
+            public void onFail(Call call, Exception e, int id) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(ChargeNotice response, int id) {
+                mChargeNotice = response;
+                if(response.type == 1){
+                    mNotice1.setText(response.notice);
+                    mNotice2.setVisibility(View.GONE);
+                }else{
+                    mNotice2.setText(response.notice);
+                    mNotice1.setVisibility(View.GONE);
+                }
+
+            }
+        };
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","fetch_charge_notice");
+        params.put("user_id",User.getInstance().getUserId());
+
+        OkHttpUtils.get().url(url)
+                .params(params)
+                .build()
+                .execute(callback);
+    }
+
+    private void getChargeItem(){
+        final Context chargeActivity = (Context)this;
+        String url = AppKit.getServerUrl();
+        JsonCallback<Charge> callback = new JsonCallback<Charge>(1 * 60 * 60 * 1000) {
+            @Override
+            public void onFail(Call call, Exception e, int id) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Charge response, int id) {
+                mCharge = response;
+
+                for (int i = 0;i < response.chargeItems.size();i++) {
+                    PersonItem item = new PersonItem(chargeActivity,null);
+                    ChargeItem chargeItems = response.chargeItems.get(i);
+                    item.setArrowVisible(View.GONE);
+                    item.setItemName(chargeItems.value);
+                    item.setItemValue("¥ " + chargeItems.money);
+                    item.setId(i);
+                    item.setOnClickListener((View.OnClickListener)chargeActivity);
+
+                    TextView valueText = (TextView) item.getChildView("item_value");
+                    valueText.setTextColor(Color.parseColor("#ff0000"));
+
+                    item.setItemNameImage(R.mipmap.pay_diamond);
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                            LayoutParams.WRAP_CONTENT);
+                    mLayoutCharge.addView(item,params);
+                }
+                //mNotice2.setText(response.notice);
+            }
+        };
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","fetch_charge");
+
+        OkHttpUtils.get().url(url)
+                .params(params)
+                .build()
+                .execute(callback);
     }
 
     private float getPayAmountFormId(int id){
@@ -228,12 +278,17 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
             @Override
             public void onClick(View view) {
                 inputDialog.dismiss();
+                if(mPayResult.state){
+                    mNotice2.setVisibility(View.GONE);
+                    mNotice1.setVisibility(View.VISIBLE);
+                    mNotice1.setText(mPayResult.notice2);
+                }
             }
         });
 
-        StringCallback callback = new StringCallback() {
+        JsonCallback<PayResult> callback = new JsonCallback<PayResult>() {
             @Override
-            public void onError(Call call, Exception e, int id) {
+            public void onFail(Call call, Exception e, int id) {
                 e.printStackTrace();
                 String msg = "";
 
@@ -257,10 +312,17 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
             }
 
             @Override
-            public void onResponse(String response, int id) {
+            public void onResponse(PayResult response, int id) {
                 Log.i(App.TAG,"order id = " + response);
+                mPayResult = response;
+                chargeNotice.setText(response.notice);
+                inputDialog.show();
+                showProgress(false);
+                if(!response.state){
+                    chargeNotice.setTextColor(0xFFC93437);
+                }
 
-                if(response.indexOf("支付失败") != -1){
+                /*if(response.indexOf("支付失败") != -1){
                     chargeNotice.setText(response);
                 }else{
                     String text   = "充值成功! 订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
@@ -268,11 +330,11 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
 
 
                     String notice = "      您有一笔交易未支付，订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                    mNotice.setText(notice);
+                    mNotice2.setText(notice);
                 }
 
                 inputDialog.show();
-                showProgress(false);
+                showProgress(false);*/
             }
         };
 

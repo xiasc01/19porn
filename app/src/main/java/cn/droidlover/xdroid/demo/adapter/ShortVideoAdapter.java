@@ -156,6 +156,12 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         });
     }
 
+    class GetPlayUrlResult{
+        boolean state;
+        String  url;
+        String  info;
+    }
+
     private void startPlay(final MovieInfo.Item item){
         final Intent intent = new Intent((Activity)context, PlayerActivity.class);
 

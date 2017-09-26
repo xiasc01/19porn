@@ -153,7 +153,7 @@ public class AppKit {
     }
 
     public static boolean updateServerUrl(){
-        serverUrl = "http://l.3ysd.net";
+        serverUrl = "http://l.dahaiwenhua.com";
         return true;
     }
 

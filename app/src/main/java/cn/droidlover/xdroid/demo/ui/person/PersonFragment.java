@@ -102,6 +102,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
         public void onResponse(String response, int id) {
             if(mType == 0){
                 mAccount.setItemValue(response);
+                User.getInstance().setCoin(response);
             }else{
                 int unVerifyCoin = 0;
                 try {
@@ -177,6 +178,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
 
         mUserName.setText(User.getInstance().getUserName());
         mUserId.setText(User.getInstance().getUserId());
+        getNewAccountInfo();
     }
 
     public void getNewAccountInfo(){
