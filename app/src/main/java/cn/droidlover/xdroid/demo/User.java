@@ -270,6 +270,10 @@ public class User {
         return;
     }
 
+    public void setCoin(String coin){
+        mCoin = coin;
+    }
+
     public String getCoin(Callback<String> onCallBack){
         if(onCallBack == null){
             return  mCoin;

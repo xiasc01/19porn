@@ -57,6 +57,10 @@ public class MovieInfoActivity extends XActivity {
             return;
         }
         IDEdit.setText(item.getMovie_id());
+        title.setText(item.getTitle());
+        content.setText(item.getScore());
+        pic.setText(item.getPic_score());
+        value.setText(item.getValue());
 
 
         title.addTextChangedListener(new TextWatcher() {
