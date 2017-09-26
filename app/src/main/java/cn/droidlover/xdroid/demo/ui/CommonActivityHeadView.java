@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -36,6 +37,21 @@ public class CommonActivityHeadView extends LinearLayout implements View.OnClick
         mTitle.setText(title);
     }
 
+    public void setTitleSize(int size){
+        mTitle.setTextSize(size);
+    }
+
+    public void setTitleMargins(int left,int top,int right,int bottom){
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)mTitle.getLayoutParams();
+        layoutParams.setMargins(left,top,right,bottom);
+        mTitle.setLayoutParams(layoutParams);
+    }
+
+    public void setBackButtonMargins(int left,int top,int right,int bottom){
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)imageButton.getLayoutParams();
+        layoutParams.setMargins(left,top,right,bottom);
+        imageButton.setLayoutParams(layoutParams);
+    }
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.back_image){

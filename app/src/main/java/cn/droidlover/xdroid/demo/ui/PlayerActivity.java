@@ -3,16 +3,24 @@ package cn.droidlover.xdroid.demo.ui;
 import java.lang.ref.WeakReference;
 
 import com.aplayer.aplayerandroid.APlayerAndroid;
-import cn.droidlover.xdroid.demo.R;
 
+import butterknife.BindView;
+import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.kit.AppKit;
+
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -21,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -56,6 +65,8 @@ public class PlayerActivity extends Activity {
 	private View mTipInfoProgress;
 	private View mTipInfoProgressBackground;
 	private View mTipInfoProgressFill;
+	private View mProgressView;
+	private TextView mTextProgress;
 	
 	// Header overlay
 	private ImageButton mGoBackButton;
@@ -114,8 +125,9 @@ public class PlayerActivity extends Activity {
 
 		mAPlayerAndroid = new APlayerAndroid();
 
-		mAPlayerAndroid.SetConfig(APlayerAndroid.CONFIGID.HW_DECODER_USE, "1");
-		mAPlayerAndroid.SetConfig(APlayerAndroid.CONFIGID.HTTP_AHTTP_CACHE_DIR,intent.getStringExtra(VIDEO_CACHE_PATH));
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HW_DECODER_USE, "1");
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "1");
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_AHTTP_CACHE_DIR,intent.getStringExtra(VIDEO_CACHE_PATH));
 		mSurView = (SurfaceView)findViewById(R.id.player_surface);
 
 		mPlayPauseButton = (ImageButton)findViewById(R.id.play_pause);
@@ -146,7 +158,10 @@ public class PlayerActivity extends Activity {
 		mTipInfoProgress = findViewById(R.id.tip_info_progress);
 		mTipInfoProgressBackground = findViewById(R.id.tip_info_progress_background);
 		mTipInfoProgressFill = findViewById(R.id.tip_info_progress_fill);
-		
+		mProgressView		 = findViewById(R.id.pay_progress);
+		mTextProgress        = (TextView) findViewById(R.id.text_progress);
+
+
 		mGoBackButton = (ImageButton)findViewById(R.id.go_back);
 		mGoBackButton.setOnClickListener(mGoBackListener);
 		mTitleText = (TextView)findViewById(R.id.player_overlay_title);
@@ -159,28 +174,59 @@ public class PlayerActivity extends Activity {
 		mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 		mAudioMaxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		
-		mAPlayerAndroid.SetView(mSurView);
-		mAPlayerAndroid.SetConfig(APlayerAndroid.CONFIGID.HW_DECODER_USE, "1");
+		mAPlayerAndroid.setView(mSurView);
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HW_DECODER_USE, "1");
 		Log.d(DEBUG_TAG, "open: " + mCurPlayVideoPath);
 		OpenMedia(mCurPlayVideoPath);
-
+		showProgress(true);
 		final Activity playerActivity = this;
 		mAPlayerAndroid.setOnOpenSuccessListener(new APlayerAndroid.OnOpenSuccessListener() {	
 			@Override
 			public void onOpenSuccess() {
-				Log.d(DEBUG_TAG, "onOpenSuccess");
-				int width  = mAPlayerAndroid.GetVideoWidth();
-				int height = mAPlayerAndroid.GetVideoHeight();
+				showProgress(false);
+				int videoWidth  = mAPlayerAndroid.getVideoWidth();
+				int videoHeight = mAPlayerAndroid.getVideoHeight();
 
-				if(width > height){
+				Log.d(DEBUG_TAG, "onOpenSuccess video_width = " + videoWidth + " video_height = " + videoHeight);
+				int screenWidth  = AppKit.getScreenWidth();
+				int screenHeight = AppKit.getScreenHeight();
+				int l = 0;
+				int t = 0;
+				int w  = screenHeight;
+				int h =  screenWidth;
+				if(videoWidth >= videoHeight){
 					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+					if((videoWidth * 1.0f) / (videoHeight * 1.0f) > (screenHeight* 1.0f / screenWidth * 1.0f)){
+						h = videoHeight * w / videoWidth;
+						t = (screenWidth - h) / 2;
+					}else{
+						w  = videoWidth * h / videoHeight;
+						l  = (screenHeight - w) / 2;
+					}
 				}else{
 					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+					w = screenWidth;
+					h = screenHeight;
+					if((videoHeight * 1.0f) / (videoWidth * 1.0f) > (screenWidth* 1.0f / screenHeight * 1.0f)){
+						w  = videoWidth * h / videoHeight;
+						l  = (screenWidth - w) / 2;
+					}else{
+						h = videoHeight * w / videoWidth;
+						t = (screenHeight - h) / 2;
+					}
 				}
 
+				FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)mSurView.getLayoutParams();
+				layoutParams.width = w;
+				layoutParams.height = h;
+				layoutParams.leftMargin = l;
+				layoutParams.topMargin = t;
+				mSurView.setLayoutParams(layoutParams);
+				Log.d(DEBUG_TAG, "mSurView.setLayoutParams width = " + w + " height = " + h);
+				//layoutParams.width
 				play();
 				if(isChangeHwSoftDecoder){
-					mAPlayerAndroid.SetPosition(mCurPosition);
+					mAPlayerAndroid.setPosition(mCurPosition);
 					isChangeHwSoftDecoder = false;
 				}
 			}
@@ -209,7 +255,23 @@ public class PlayerActivity extends Activity {
 				}*/
 				updateTitle();
 				updatePlayControlButtons();
-				updateProgress();
+				updateProgress(-1);
+			}
+		});
+
+		mAPlayerAndroid.setOnBufferListener(new APlayerAndroid.OnBufferListener() {
+			@Override
+			public void onBuffer(int progress) {
+				mTextProgress.setText(progress + "%");
+				if(progress == 0){
+					showProgress(true);
+					mTextProgress.setVisibility(View.VISIBLE);
+					mPlayerHandler.sendEmptyMessageDelayed(FADE_OUT_OVERLAY, 500);
+				}
+				if(progress == 100){
+					showProgress(false);
+					mTextProgress.setVisibility(View.GONE);
+				}
 			}
 		});
 	}
@@ -231,7 +293,7 @@ public class PlayerActivity extends Activity {
 		}*/
 
 		Log.v(DEBUG_TAG, "before finish");
-		String playResult = mAPlayerAndroid.GetConfig(APlayerAndroid.CONFIGID.PLAYRESULT);
+		String playResult = mAPlayerAndroid.getConfig(APlayerAndroid.CONFIGID.PLAYRESULT);
 		/*if (!playResult.equals("0x0") && !playResult.equals("0x1")) {
 			Toast.makeText(mSurView.getContext(), "发生错误: " + playResult, Toast.LENGTH_LONG).show();
 		}*/
@@ -260,13 +322,13 @@ public class PlayerActivity extends Activity {
 	protected void onPause() {
 		Log.d(DEBUG_TAG, "onPause");
 		super.onPause();
-		if (mAPlayerAndroid.GetState() == APlayerAndroid.PlayerState.APLAYER_PLAYING) {
+		if (mAPlayerAndroid.getState() == APlayerAndroid.PlayerState.APLAYER_PLAYING) {
 			mPlayOnResume = true;
 		}
 		else {
 			mPlayOnResume = false;
 		}
-		mAPlayerAndroid.Pause();
+		mAPlayerAndroid.pause();
 	}
 	
 	@Override
@@ -279,10 +341,10 @@ public class PlayerActivity extends Activity {
 	protected void onDestroy() {
 		Log.v(DEBUG_TAG, "onDestory");
 		super.onDestroy();
-		mAPlayerAndroid.Close();
+		mAPlayerAndroid.close();
 		mAPlayerAndroid.setOnOpenSuccessListener(null);
 		mAPlayerAndroid.setOnPlayStateChangeListener(null);
-		mAPlayerAndroid.Destroy();
+		mAPlayerAndroid.destroy();
 	}
 
 	private int mTouchAction = TOUCH_NONE;
@@ -395,8 +457,8 @@ public class PlayerActivity extends Activity {
             return;
         mTouchAction = TOUCH_SEEK;
 
-        int length = mAPlayerAndroid.GetDuration();
-        int time = mAPlayerAndroid.GetPosition();
+        int length = mAPlayerAndroid.getDuration();
+        int time = mAPlayerAndroid.getPosition();
 
         // 拖动距离 最长 10分钟
         int jump = (int) (Math.signum(gesturesize) * ((600000 * Math.pow((gesturesize / 8), 4)) + 3000));
@@ -408,7 +470,7 @@ public class PlayerActivity extends Activity {
 
         int jumpTo = jump + time;
         if (seek) {
-        	mAPlayerAndroid.SetPosition(jumpTo);
+        	mAPlayerAndroid.setPosition(jumpTo);
         }
 
         float progress = (float) 1.0;
@@ -440,7 +502,7 @@ public class PlayerActivity extends Activity {
 	        	activity.hideOverlay();
 	        	break;
 	        case UPDATE_PROGRESS:
-	        	activity.updateProgress();
+	        	activity.updateProgress(-1);
 	        	if (activity.isOverlayVisible() && !mIsDragging) {
 	        		// 1秒后再更新进度条
 	        		this.sendEmptyMessageDelayed(UPDATE_PROGRESS, 1000);
@@ -482,10 +544,16 @@ public class PlayerActivity extends Activity {
 		mIsOverlayVisible = false;
 	}
 
-	private void updateProgress() {
+	private void updateProgress(int progress) {
 		// 更新播放进度
-		int time = (int)mAPlayerAndroid.GetPosition();
-        int length = (int)mAPlayerAndroid.GetDuration();
+		int time = 0;
+		if(progress == -1){
+			time = (int)mAPlayerAndroid.getPosition();
+		}else {
+			time = progress;
+		}
+
+        int length = (int)mAPlayerAndroid.getDuration();
         mCurPosition = time;
         
         mSeekBar.setMax(length);
@@ -538,16 +606,16 @@ public class PlayerActivity extends Activity {
 	}
 	
 	private void OpenMedia(String path) {
-		mAPlayerAndroid.Open(path);
+		mAPlayerAndroid.open(path);
 	}
 	
 	private void play() {
-		mAPlayerAndroid.Play();
+		mAPlayerAndroid.play();
 		mSurView.setKeepScreenOn(true);
 	}
 	
 	private void pause() {
-		mAPlayerAndroid.Pause();
+		mAPlayerAndroid.pause();
 		mSurView.setKeepScreenOn(false);
 	}
 
@@ -571,7 +639,7 @@ public class PlayerActivity extends Activity {
 	}
 	
 	private final OnSeekBarChangeListener mSeekListener = new OnSeekBarChangeListener() {
-
+		int mProgress = 0;
         @Override
         public void onStartTrackingTouch(SeekBar seekBar) {
             mIsDragging = true;
@@ -581,14 +649,16 @@ public class PlayerActivity extends Activity {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
         	mIsDragging = false;
+			mAPlayerAndroid.setPosition(mProgress);
             showOverlayTimeout(3000);
         }
 
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (fromUser) {
-            	mAPlayerAndroid.SetPosition(progress);
-            	updateProgress();
+				mProgress = progress;
+            	//mAPlayerAndroid.setPosition(progress);
+            	updateProgress(progress);
             	mTimeText.setText(formatTime(progress));
             }
         }
@@ -637,7 +707,7 @@ public class PlayerActivity extends Activity {
     private final OnClickListener mPlayPauseButtonClickListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			int curState = mAPlayerAndroid.GetState();
+			int curState = mAPlayerAndroid.getState();
 			if (curState == APlayerAndroid.PlayerState.APLAYER_PLAYING
 					|| curState == APlayerAndroid.PlayerState.APLAYER_PLAY) {
 				pause();
@@ -663,7 +733,7 @@ public class PlayerActivity extends Activity {
     }
     
     private void updatePlayControlButtons() {
-    	int curState = mAPlayerAndroid.GetState();
+    	int curState = mAPlayerAndroid.getState();
 		if (curState == APlayerAndroid.PlayerState.APLAYER_PLAYING
 				|| curState == APlayerAndroid.PlayerState.APLAYER_PLAY) {
     		mPlayPauseButton.setImageResource(R.drawable.ic_pause);
@@ -682,5 +752,38 @@ public class PlayerActivity extends Activity {
     private void updateTitle() {
     	mTitleText.setText(mCurPlayVideoName);
     }
+
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+	private void showProgress(final boolean show) {
+		// On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+		// for very easy animations. If available, use these APIs to fade-in
+		// the progress spinner.
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+			int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+
+           /* mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                }
+            });*/
+
+			mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+			mProgressView.animate().setDuration(shortAnimTime).alpha(
+					show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+				@Override
+				public void onAnimationEnd(Animator animation) {
+					mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+				}
+			});
+		} else {
+			// The ViewPropertyAnimator APIs are not available, so simply show
+			// and hide the relevant UI components.
+			mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+			//mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+		}
+	}
 
 }

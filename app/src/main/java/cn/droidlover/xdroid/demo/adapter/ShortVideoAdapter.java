@@ -9,9 +9,13 @@ import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import java.util.List;
 
 import butterknife.BindView;
 import cn.droidlover.xdroid.base.SimpleRecAdapter;
@@ -24,6 +28,7 @@ import cn.droidlover.xdroid.demo.ui.MovieInfoActivity;
 import cn.droidlover.xdroid.demo.ui.PlayerActivity;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
+import cn.droidlover.xdroid.demo.ui.SeriesVideoActivity;
 import cn.droidlover.xdroid.kit.KnifeKit;
 
 /**
@@ -31,6 +36,8 @@ import cn.droidlover.xdroid.kit.KnifeKit;
  */
 
 public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVideoAdapter.ViewHolder> {
+
+    private boolean isSeriesVideoAdapter = false;
 
     public ShortVideoAdapter(Context context) {
         super(context);
@@ -50,13 +57,16 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
     public void onBindViewHolder(ViewHolder holder, int position) {
         final  MovieInfo.Item item = data.get(position);
 
-        if(item.getSet_name() != null && item.getSet_name().length() > 0){
-            /*holder.mulItemLayout.setVisibility(View.VISIBLE);
-            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams)holder.mulItemLayout.getLayoutParams();
+        if(item.getSet_name() != null && item.getSet_name().length() > 0 && !isSeriesVideoAdapter){
+            holder.ivGirl.setVisibility(View.GONE);
+            holder.layoutMulItem.setVisibility(View.VISIBLE);
+            holder.playBtn.setVisibility(View.GONE);
+
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)holder.layoutMulItem.getLayoutParams();
             layoutParams.width = 1080;
             layoutParams.height = 9 * layoutParams.width / 16;
-            holder.mulItemLayout.setLayoutParams(layoutParams);
-            holder.singleItemLayout.setVisibility(View.GONE);
+            holder.layoutMulItem.setLayoutParams(layoutParams);
+
             List<MovieInfo.Item> movies = VideoManager.getInstance().getMovieSet(item.getSet_name());
             if(movies != null){
                 for (int i = 0;i < movies.size() && i < 4;i++){
@@ -66,21 +76,45 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     if(i == 2) setImage(subItem,holder.ivThumb3);
                     if(i == 3) setImage(subItem,holder.ivThumb4);
                 }
-            }*/
-            return;
+            }
+            holder.title.setText(item.getSet_name());
+
+            holder.layoutMulItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent((Activity)context, SeriesVideoActivity.class);
+                    if(intent != null){
+                        intent.putExtra("SeriesVideoName", item.getSet_name());
+                        context.startActivity(intent);
+                    }
+                }
+            });
+        }else{
+            holder.ivGirl.setVisibility(View.VISIBLE);
+            holder.layoutMulItem.setVisibility(View.GONE);
+            holder.playBtn.setVisibility(View.VISIBLE);
+
+            if(item.getMovie_id() == null || item.getThumb_key() == null){
+                Log.e(App.TAG,"onBindViewHolder movie is null");
+                return;
+            }
+
+            setImage(item,holder.ivGirl);
+            holder.ivGirl.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startPlay(item);
+                }
+            });
+
+            holder.playBtn.setOnClickListener(new ImageButton.OnClickListener(){
+                public void onClick(View v) {
+                    startPlay(item);
+                }
+            });
+            holder.title.setText(item.getTitle());
         }
 
-        holder.singleItemLayout.setVisibility(View.VISIBLE);
-        holder.mulItemLayout.setVisibility(View.GONE);
-        if(item.getMovie_id() == null || item.getThumb_key() == null){
-            Log.e(App.TAG,"onBindViewHolder movie is null");
-            return;
-        }
-
-        setImage(item,holder.ivGirl);
-        //VideoManager.getInstance().setThumbToImageView(item.getMovie_id(),item.getType(),position,holder.ivGirl);
-
-        holder.title.setText(item.getTitle());
         holder.duration.setText(item.getFormatDuration());
         holder.value.setText(item.getValue());
         holder.contentScore.setText("内容 " + item.getScore());
@@ -97,22 +131,6 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.title.setTextColor(Color.argb(250,200, 200, 200));
             holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
         }
-
-        Log.i(App.TAG,"title " + item.getTitle());
-
-
-        holder.ivGirl.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startPlay(item);
-            }
-        });
-
-        holder.playBtn.setOnClickListener(new ImageButton.OnClickListener(){
-            public void onClick(View v) {
-                startPlay(item);
-            }
-        });
 
         holder.praiseBtn.setOnClickListener(new ImageButton.OnClickListener(){
             public void onClick(View v) {
@@ -197,13 +215,11 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         thread.start();
     }
 
+    public void setIsSeriesVideoAdapter(boolean seriesVideoAdapter) {
+        isSeriesVideoAdapter = seriesVideoAdapter;
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.mul_item_layout)
-        View mulItemLayout;
-
-        @BindView(R.id.single_item_layout)
-        View singleItemLayout;
-
         @BindView(R.id.iv_girl)
         ImageView ivGirl;
         @BindView(R.id.short_video_title)
@@ -233,7 +249,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
 
 
 
-
+        @BindView(R.id.mul_item_layout)
+        View layoutMulItem;
         @BindView(R.id.ivThumb1)
         ImageView ivThumb1;
         @BindView(R.id.ivThumb2)

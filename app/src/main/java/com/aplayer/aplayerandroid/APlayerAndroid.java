@@ -1,35 +1,38 @@
 package com.aplayer.aplayerandroid;
-import java.lang.ref.WeakReference;
-
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.MotionEvent;
-import android.view.Surface;
-import android.view.SurfaceView;
-import android.view.SurfaceHolder;
-import android.view.Gravity;
-import android.view.TextureView;
-import android.view.View;
-import android.view.View.OnTouchListener;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
-import android.app.Activity;
-import android.widget.TextView;
-import android.widget.FrameLayout;
-import android.os.Looper;
-import android.os.Handler;
-import android.os.Message;
 import android.media.MediaPlayer;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.TextureView;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
+import com.aplayer.hardwareencode.HardwareEncoder;
 
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
+
+import cn.droidlover.xdroid.demo.App;
 
 public class APlayerAndroid {
 	private static final String TAG 	  = APlayerAndroid.class.getSimpleName();
@@ -45,9 +48,6 @@ public class APlayerAndroid {
     private boolean        	   mIsAutoPlay        			 = false;
     private boolean        	   mIsCurrentUseSysmediaplay 	 = false;
     private boolean            mSubtitleShowExternal       	 = false;
-    private boolean            mUseDES                       = false;
-    private ByteBuffer 		   mDecryptKey = null;
-    
     private int            	   mObjId                        = 0;
     public static  int     	   gObjId                        = 0;
     private boolean        	   mDestroy                      = false;
@@ -58,17 +58,25 @@ public class APlayerAndroid {
     private int                mSubtitleViewTop              = 0;
     private int                mHwReCreatePos                = 0;
 	private int	   			   mBufferProgress				 = 100;
+	private HardwareEncoder    mHardwareEncoder 			 = null;
+	private int                mViewSurfaceWidth             = 0;
+	private int                mViewSurfaceHeight            = 0;
 	private int                mReCreateHwCodecState         = PlayerState.APLAYER_READ;
 	private AHttp              mAHttp                        = null;
 	private ALocalFile         mALocalFile                   = null;
-    
+	private boolean            mUpdateSurfaceView            = false;
+	private String             mSilenceAudio                 = "0";
+	private GPUImageFilter     mGpuImageFilter               = null;
 	public APlayerAndroid()
-	{	
-		Log.e(TAG,"APlayerAndroid construct");
-		
+	{
+        Log.e(TAG,"APlayerAndroid construct");
+		synchronized (APlayerAndroid.class)
+		{
+			mObjId = gObjId++;
+		}
+
 		mHwDecoder = new HardwareDecoder(this);
-		mObjId = gObjId++;
-		
+
 		Looper looper = Looper.myLooper();
 		if(looper == null) {
 			looper = Looper.getMainLooper();
@@ -82,42 +90,43 @@ public class APlayerAndroid {
 		
 		try
 		{
-			System.loadLibrary("aplayer_ffmpeg_1.1.1.54");
-			System.loadLibrary("aplayer_android_1.1.1.54");
+			System.loadLibrary("aplayer_ffmpeg_1.2.1.127");
+			System.loadLibrary("aplayer_android_1.2.1.127");
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
 			Log.e(TAG,"loadLibrary aplayer_android fail" + e.toString());
 		}
 		native_init(new WeakReference<APlayerAndroid>(this),mObjId);
+		this.openLog(true);
 	}
 	
-	public void  Destroy(){
+	public void  destroy(){
 		if(mDestroy)
 			return;
-		
+
 		mDestroy = true;
 		new Thread(new Runnable() {
 			public void run() {
-				Log.e(TAG, "Destroy");
-				Close();
-				if(IsSystemPlayer()){
+				//Log.e(TAG, "Destroy");
+				close();
+				if(isSystemPlayer()){
 					mSystemPlayer.release();
 				}
-				while(GetState() != PlayerState.APLAYER_READ){
+				while(getState() != PlayerState.APLAYER_READ){
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
-				native_uninit(mObjId);
 				
+				native_uninit(mObjId);
 		}}).start();
 	}
+
 	
-	public int SetView(Surface surface) {
+	public int setView(Surface surface) {
 		if(mDestroy) return 0;
 		
 		mSurface = surface;
@@ -125,7 +134,7 @@ public class APlayerAndroid {
 		if(mSurface != null){
 			native_setdisplay(mSurface,mObjId);
 			
-			if(IsSystemPlayer()){
+			if(isSystemPlayer()){
 				mSystemPlayer.SetView(mSurface);
 			}
 		}else{
@@ -135,18 +144,18 @@ public class APlayerAndroid {
 		}
 		return 0;
 	}
-	
-	public int SetView(TextureView textureView){
+
+	public int setView(TextureView textureView){
 		if(mDestroy) return 0;
 		
 		Log.i(TAG, "SetView TextureView");
-		
+		mHwDecoder.setRenderType(0);
 		mSurfaceview 	= textureView;
 		
 		if(textureView.isAvailable()){
 			mSurface = new Surface(textureView.getSurfaceTexture());
 			
-			if(IsSystemPlayer()){
+			if(isSystemPlayer()){
 				mSystemPlayer.SetView(mSurface);
 			}
 			native_setdisplay(mSurface,mObjId);
@@ -162,7 +171,7 @@ public class APlayerAndroid {
 			@Override
 			public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width,
 					int height) {
-				Log.i(TAG, "SurfaceTexture SizeChanged width=" + width + ", height = " + height);
+				Log.i(TAG, "TextureView SizeChanged width=" + width + ", height = " + height);
 				if(mDestroy) return;	
 				
 				//mSurface = new Surface(surface);
@@ -172,21 +181,24 @@ public class APlayerAndroid {
 			
 			@Override
 			public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-				Log.v("APlayerAndroid","SurfaceTexture Destroyed");
+				Log.v("APlayerAndroid","TextureView Destroyed");
 				
 				native_setdisplay(null,mObjId);
 				
-				if(!IsSystemPlayer() && isHwDecode()){
+				if(!isSystemPlayer() && isHwDecode() && mHwDecoder.IsCodecPrepare()){
 					Log.e(TAG, "!IsSystemPlayer() && isHwDecode()");
-					mReCreateHwCodecState = GetState();
-					SetConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE, "1");
-					Pause();
+					mReCreateHwCodecState = getState();
+					//mSilenceAudio         = getConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE);
+					Log.i(TAG,"mSilenceAudio = " + mSilenceAudio);
+					native_setconfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE,"1",mObjId);
+					pause();
 					mHwDecoder.stopCodec();
-					mHwReCreatePos = GetPosition();
+					mHwReCreatePos = getPosition();
 				}
 				
+				
 				if(mOnSurfaceDestroyListener != null)
-					mOnSurfaceDestroyListener.OnSurfaceDestroy();
+					mOnSurfaceDestroyListener.onSurfaceDestroy();
 				
 				return true;
 			}
@@ -194,12 +206,12 @@ public class APlayerAndroid {
 			@Override
 			public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
 					int height) {
-				Log.i(TAG,"SurfaceTexture Created");
+				Log.i(TAG,"TextureView Created");
 				if(mDestroy) return;
 				
 				mSurface = new Surface(surface);
 				
-				if(IsSystemPlayer()){
+				if(isSystemPlayer()){
 					mSystemPlayer.SetView(mSurface);
 				}
 				native_setdisplay(mSurface,mObjId);
@@ -212,7 +224,7 @@ public class APlayerAndroid {
 				   if(isHwDecode()){
 					   Log.e(TAG, "ReCreateCodec");
 					   mHwDecoder.ReCreateCodec();
-					   SetPosition(mHwReCreatePos);
+					   setPosition(mHwReCreatePos);
 					   
 					   mHwDecoder.setOnDecoderOneFrameListener(new HardwareDecoder.OnDecoderOneFrameListener() {
 							@Override
@@ -226,7 +238,7 @@ public class APlayerAndroid {
 										} catch (InterruptedException e) {
 											e.printStackTrace();
 										}
-										SetConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE, "0");
+										setConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE, mSilenceAudio);
 								}}).start();
 								
 								
@@ -237,7 +249,7 @@ public class APlayerAndroid {
 							}
 					   });
 					   
-					   Play();
+					   play();
 					   mReCreateHwCodecState = PlayerState.APLAYER_READ;
 					}
 				}
@@ -247,26 +259,43 @@ public class APlayerAndroid {
 		return 1;
 	}
 	
-	public int SetView(SurfaceView surfaceview){
+	public int setView(SurfaceView surfaceview){
 		if(mDestroy) return 0;
 		
-		mSurfaceview 	= surfaceview;
+		if(getAndroidLevel() >= 18){
+			mHwDecoder.setRenderType(2);
+		}else{
+			mHwDecoder.setRenderType(0);
+		}
 		
+		
+		mSurfaceview 	= surfaceview;
 		mSurface = surfaceview.getHolder().getSurface();
 		if(!mSurface.isValid()){
 			Log.i(TAG, "surface is not valid");
 			mSurface = null;
 		}else{
-			if(IsSystemPlayer()){
+			if(isSystemPlayer()){
 				mSystemPlayer.SetView(mSurface);
 			}
 			native_setdisplay(mSurface,mObjId);
 		}
-		
+
+		mViewSurfaceWidth  = surfaceview.getWidth();
+		mViewSurfaceHeight = surfaceview.getHeight();
+
 		surfaceview.getHolder().addCallback(new SurfaceHolder.Callback() {
 			public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 				Log.i(TAG, "surface Changed format=" + format + ", width=" + width + ", height="
 			            + height);
+
+				mViewSurfaceWidth  = width;
+				mViewSurfaceHeight = height;
+
+				if(mOnSurfaceChangeListener != null){
+					mOnSurfaceChangeListener.onSurfaceChange(width,height);
+				}
+
 				if(mDestroy) return;			
 				native_setdisplay(mSurface,mObjId);
 				changeSubtitleViewSize();
@@ -278,22 +307,19 @@ public class APlayerAndroid {
 				
 				mSurface = holder.getSurface();
 				
-				if(IsSystemPlayer()){
+				if(isSystemPlayer()){
 					mSystemPlayer.SetView(mSurface);
 				}
 				native_setdisplay(mSurface,mObjId);
-			    
 
-                int state = GetState();
 				if(mReCreateHwCodecState == PlayerState.APLAYER_PAUSED  ||
 				   mReCreateHwCodecState == PlayerState.APLAYER_PAUSING ||
 				   mReCreateHwCodecState == PlayerState.APLAYER_PLAY    ||
 				   mReCreateHwCodecState == PlayerState.APLAYER_PLAYING){
 				   if(isHwDecode()){
-					   Log.e(TAG, "ReCreateCodec");
+					   Log.e(TAG, "lzm ReCreateCodec");
 					   mHwDecoder.ReCreateCodec();
-					   SetPosition(mHwReCreatePos);
-					   
+					   setPosition(mHwReCreatePos);
 					   mHwDecoder.setOnDecoderOneFrameListener(new HardwareDecoder.OnDecoderOneFrameListener() {
 							@Override
 							public void onDecoderOneFrame() {
@@ -306,7 +332,7 @@ public class APlayerAndroid {
 										} catch (InterruptedException e) {
 											e.printStackTrace();
 										}
-										SetConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE, "0");
+										setConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE,mSilenceAudio);
 								}}).start();
 								
 								
@@ -316,8 +342,7 @@ public class APlayerAndroid {
 								
 							}
 					   });
-					   
-					   Play();
+					   play();
 					   mReCreateHwCodecState = PlayerState.APLAYER_READ;
 					}
 				}
@@ -325,84 +350,104 @@ public class APlayerAndroid {
 			
 			public void surfaceDestroyed(SurfaceHolder holder) {
 				Log.i("APlayerAndroid","surface Destroyed");
-				
+				mSurface = null;
 				native_setdisplay(null,mObjId);
 				
-				if(!IsSystemPlayer() && isHwDecode()){
+				if(!isSystemPlayer() && isHwDecode() && mHwDecoder.IsCodecPrepare()){
 					Log.e(TAG, "!IsSystemPlayer() && isHwDecode()");
-					mReCreateHwCodecState = GetState();
-					SetConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE, "1");
-					Pause();
+					mReCreateHwCodecState = getState();
+					//mSilenceAudio         = getConfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE);
+					Log.i(TAG,"mSilenceAudio = " + mSilenceAudio);
+					native_setconfig(APlayerAndroid.CONFIGID.AUDIO_SILENCE,"1",mObjId);
+					pause();
 					mHwDecoder.stopCodec();
-					mHwReCreatePos = GetPosition();
+					mHwReCreatePos = getPosition();
 				}
 				
-				if(mOnSurfaceDestroyListener != null)
-					mOnSurfaceDestroyListener.OnSurfaceDestroy();
+				if(mOnSurfaceDestroyListener != null){
+					mOnSurfaceDestroyListener.onSurfaceDestroy();
+				}
 				}
 			});
-		
-		//surfaceview.setVisibility(View.INVISIBLE);
-		//surfaceview.setVisibility(View.VISIBLE);//Ç¿ÆÈsurfaceCreated±»µ÷ÓÃ
 		return 0;
 	}
-	
-	public void UseSystemPlayer(boolean use){
+
+
+
+	public void useSystemPlayer(boolean use){
 		mIsCurrentUseSysmediaplay = use;
 		if(use && (mSystemPlayer == null || !mSystemPlayer.hasMediaPlayer())){
 			mSystemPlayer 	= new SystemMediaPlay();
 		}
 	}
 	
-	public boolean IsSystemPlayer(){
+	public boolean isSystemPlayer(){
 		return mIsCurrentUseSysmediaplay && mSystemPlayer != null && mSystemPlayer.hasMediaPlayer();
 	}
 	
-	public int Open(String path){		
-		if(mDestroy) return 0;
-
-		//path = "http://lzmlsfe-test1.oss-cn-shenzhen.aliyuncs.com/G(Flash%20Video)_V(Main%40L3.0%2CSD)_A(LC).mp4?OSSAccessKeyId=LTAIYNOWOQy5cJTY&Expires=1484289225&Signature=6GjmTKB9iOs9238HQfyubv%2FJ1aE%3D&pos=23425&size=3435&md5=ajdfklajdfkasdakdgj";
-		SetConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "1");
+	public int open(String path){
 		
-		mIsSuccess 		= false;
+		if(mDestroy) return 0;
+		//path = "http://sl.video.kcloud.n0808.com/c6c80531ec733b6b32ba33e96a53e1c130b2f1d1?sign=2a033be4517a020eabe65b3955f04c58&t=593e4e29&ts=1497255465&hash=29a839481762f287e25ad2498d8e3a06";
+		//path = "http://static3.ssp.xunlei.com/d1/2017/03/c9efdacf7a69a93a9a34b911eca7639a.mp4";
+		//this.setConfig(CONFIGID.HTTP_USER_AHTTP, "1");
+		//path = "http://192.168.123.234/2011.avi";
+		//path = "http://10.10.121.10:55555/media/sdb1/bx.rmvb";
+		//path = "http://10.10.121.10:47777/media/sda4/onecloud/young.rmvb";
+
+		//path = "http://192.168.123.234/demo540p2.mp4";
+		//path = "http://192.168.123.234/self.MOV";
+
+		//path = "http://10.10.121.10:47777/media/sda2/onecloud/exception_sound.mkv";
+		//path =  "http://10.10.121.10:47777/media/sda2/onecloud/seven.mkv";
+		//path = "http://10.10.121.10:47777/media/sda2/onecloud/pre_alien.mp4";
+		//path = "http://192.168.21.241/exception_sound.mkv";
+
+		//path = "http://192.168.123.234/aiqing.mkv";
+
+		mIsSuccess = false;
 		mBufferProgress = 100;
 		mALocalFile     = null;
 		
-		if(IsSystemPlayer()){
+		if(mUpdateSurfaceView){
+			if(mSurfaceview != null){
+				mSurfaceview.setVisibility(View.INVISIBLE);
+				mSurfaceview.setVisibility(View.VISIBLE);
+			}
+			mUpdateSurfaceView = false;
+		}
+
+		if(isSystemPlayer()){
 			return mSystemPlayer.open(path);
 		}
-		
+
 		int ret = native_open(path,mObjId);
 		if(ret == -1){
 			Log.e(TAG, "throw Exception state is not right or other fatal error");
 		}
-		
 		mHwDecoder.setOnDecoderOneFrameListener(new HardwareDecoder.OnDecoderOneFrameListener() {
 			@Override
 			public void onDecoderOneFrame() {
 				mHwDecoder.setOnDecoderOneFrameListener(null);
-				Message m = mEventHandler.obtainMessage(MsgID.FRIST_FRAME_RENDER, 0, 0, null);
+				Message m = mEventHandler.obtainMessage(MsgID.FRIST_VIDEO_FRAME_RENDER, 0, 0, null);
 				if(m == null){
 					return;
 				}
-				m.what = MsgID.FRIST_FRAME_RENDER;
+				m.what = MsgID.FRIST_VIDEO_FRAME_RENDER;
 				mEventHandler.sendMessage(m);
 			}
 	   });
-		return ret;
+	   return ret;
 	}
 	
-	public int Open(FileDescriptor fileDescriptor){
+	public int open(FileDescriptor fileDescriptor){
 		if(mDestroy) return 0;
 		
 		mIsSuccess = false;
+		mBufferProgress = 100;
 		
-		if(IsSystemPlayer()){
-			//return mSystemPlayer.open(fileDescriptor);
-		}
-		
-		SetConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "1");
 		mALocalFile = new ALocalFile(fileDescriptor);
+		this.setOnExtIOListerner(mALocalFile);
 		
 		int ret = native_open("c:\\",mObjId);
 		if(ret == -1){
@@ -411,25 +456,25 @@ public class APlayerAndroid {
 		return ret;
 	}
 	
-	public int Close(){
-		if(IsSystemPlayer()){
+	public int close(){
+		if(isSystemPlayer()){
 			return mSystemPlayer.close();
 		}
 		
-		if(isHwDecode()){
+		/*if(isHwDecode()){
 			mHwDecoder.stopCodec();
-		}
+		}*/
 		
 		return native_close(mObjId);
 	}
 	
-	public int Play(){
+	public int play(){
 		if(mDestroy) return 0;
 		
 		createSubtitleView();
 		
 		if(mIsSuccess){
-			if(IsSystemPlayer()){
+			if(isSystemPlayer()){
 				return mSystemPlayer.play();
 			}
 			
@@ -443,93 +488,94 @@ public class APlayerAndroid {
 		return 0;
 	}
 	
-	public int Pause(){
+	public int pause(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.pause();
 		}
 		return native_pause(mObjId);
 	}
 	
-	public static String GetVersion(){
-		return "1.1.1.54";
+	public static String getVersion(){
+		return "1.2.1.125";
 	}
 	
-	public int GetState(){
+	public int getState(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getState();
 		}
 		return native_getState(mObjId);
 	}
 	
-	public int GetDuration(){
+	public int getDuration(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getDuration();
 		}
 		
 		return native_getduration(mObjId);
 	}
 	
-	public int GetPosition(){
+	public int getPosition(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getPosition();
 		}
 		
 		return native_getposition(mObjId);
 	}
 	
-	public int SetPosition(int msec){
+	public int setPosition(int msec){
+		Log.i(App.TAG,"setPosition pos = " + msec);
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.setPosition(msec);
 		}
 		
 		return native_setposition(msec,mObjId);
 	}
 	
-	public int GetVideoWidth(){
+	public int getVideoWidth(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getVideoWidth();
 		}
 		
 		return native_getwidth(mObjId);
 	}
 	
-	public int GetVideoHeight(){
+	public int getVideoHeight(){
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getVideoHeight();
 		}
 		
 		return native_getheight(mObjId);
 	}
 	
-	public int GetVolume()
+	public int getVolume()
 	{
 		return 0;
 	}
 	
-	public int SetVolume(int volume)
+	public int setVolume(int volume)
 	{
 		return 0;
 	}
 	
-	public int GetBufferProgress()
+	public int getBufferProgress()
 	{
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return mSystemPlayer.getBufferProgress();
 		}
 
@@ -537,11 +583,11 @@ public class APlayerAndroid {
 		//return native_getbufferprogress(mObjId);
 	}
 	
-	public String GetConfig(int configID)
+	public String getConfig(int configID)
 	{
 		if(mDestroy) return "";
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return "";
 		}
 		
@@ -560,11 +606,11 @@ public class APlayerAndroid {
 		}
 	}
 	
-	public int SetConfig(int configID,String value)
+	public int setConfig(int configID,String value)
 	{
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return 0;
 		}
 		
@@ -577,40 +623,43 @@ public class APlayerAndroid {
 				return config_set_subtitle_show(value);
 			case CONFIGID.SUBTITLE_FILE_NAME:
 				return config_set_subtitle_file_name(value);
-			case CONFIGID.VR_ENABLE_INNER_TOUCH_ROTATE:
-				return config_set_vr_touch_rotate(value);
-			case CONFIGID.VR_ENABLE:
-				boolean vr_enable = value.equalsIgnoreCase("1");
-				if(!vr_enable){
-					config_set_vr_touch_rotate("0");
-				}
-				return native_setconfig(configID,value,mObjId);
 			case CONFIGID.HW_DECODER_USE:
 				return config_set_hwdecode_use(value);
 			case CONFIGID.HTTP_AHTTP_CACHE_DIR:
 				return config_set_ahttp_cache_dir(value);
+			case CONFIGID.HTTP_USER_AHTTP:
+				return config_set_ahttp(value);	
+			case CONFIGID.AUDIO_SILENCE:
+				this.mSilenceAudio = value;
+				return native_setconfig(configID,value,mObjId);
+			case CONFIGID.RECORD_BIT:
+				int bitRate = Integer.parseInt(value);
+				return this.getEncodeCore().setVideoBitRate(bitRate);
+			case CONFIGID.RECORD_HEIGHT:
+				int recordHeight = Integer.parseInt(value);
+				return this.getEncodeCore().setVideoHeight(recordHeight);
+			case CONFIGID.RECORD_WIDTH:
+				int recordeWidht = Integer.parseInt(value);
+				return this.getEncodeCore().setVideoWidth(recordeWidht);
 			default:
 				return native_setconfig(configID,value,mObjId);
 		}
 	}
 	
-	public int SetVideoOrientation(int nOrientation)
+	public int setVideoOrientation(int nOrientation)
 	{
 		if(mDestroy) return 0;
 		
-		if(IsSystemPlayer()){
+		if(isSystemPlayer()){
 			return 0;
 		}
 		 return native_setVideoOrientation(nOrientation,mObjId);
 	}
 	
-	public void SetDecryKey(ByteBuffer key){
-		mDecryptKey = key;
-		mUseDES     = true;
-	}
+	
 	
 	private boolean isHwDecode(){
-		return (GetConfig(CONFIGID.HW_DECODER_USE).equals("1") && GetConfig(CONFIGID.HW_DECODER_ENABLE).equals("1"));
+		return (getConfig(CONFIGID.HW_DECODER_USE).equals("1") && getConfig(CONFIGID.HW_DECODER_ENABLE).equals("1"));
 	}
 	
 	private int  config_set_subtitle_show(String value){
@@ -648,7 +697,6 @@ public class APlayerAndroid {
 			return "0";
 		}
 	}
-	
 	private String  config_get_subtitle_show()
 	{
 		return mSubtitleShow;
@@ -658,7 +706,7 @@ public class APlayerAndroid {
 		mIsAutoPlay = (value.equalsIgnoreCase("1"));
 		return 1;
 	}
-	
+
 	private String  config_get_auto_play(){
 		return (mIsAutoPlay ? "1" : "0");
 	}
@@ -672,31 +720,18 @@ public class APlayerAndroid {
 		return mFileName;
 	}
 	
-	private int config_set_vr_touch_rotate(String value){
-		boolean vr_touch_rotate = value.equalsIgnoreCase("1");
-		if(vr_touch_rotate && mSurfaceview != null)
-		{
-			mSurfaceview.setOnTouchListener(onTouchListener);
-			mIsVrTouchRotateEnable = true;
-		}
-		if(!vr_touch_rotate && mSurfaceview != null)
-		{
-			mSurfaceview.setOnTouchListener(null);
-			mIsVrTouchRotateEnable = false;
-		}
-		return 1;
-	}
 	
 	private String config_get_vr_touch_rotate(){
 		return (mIsVrTouchRotateEnable ? 1:0) + "";
 	}
 	
+
 	private int config_set_hwdecode_use(String value){
-		if(GetConfig(CONFIGID.HW_DECODER_USE).equals(value)){
+		if(getConfig(CONFIGID.HW_DECODER_USE).equals(value)){
 			return 1;
 		}
 		
-		int state = GetState();
+		int state = getState();
 		if(state == PlayerState.APLAYER_PAUSED  ||
 		   state == PlayerState.APLAYER_PAUSING ||
 		   state == PlayerState.APLAYER_PLAY    ||
@@ -707,13 +742,27 @@ public class APlayerAndroid {
 		native_setconfig(CONFIGID.HW_DECODER_USE, value, mObjId);
 		return 1;
 	}
+
+	private int config_set_ahttp(String value){
+		if(value.equals("1")){
+			if(mAHttp == null){
+				mAHttp = new AHttp();
+			}
+			
+			if(mAHttp != null){
+				setOnExtIOListerner(mAHttp);
+			}
+		}else{
+			mAHttp = null;
+			setOnExtIOListerner(null);
+		}
+		return 1;
+	}
 	
 	private int config_set_ahttp_cache_dir(String value){
 		if(mAHttp == null){
 			mAHttp = new AHttp();
 		}
-		
-		
 		
 		if(mAHttp != null){
 			mAHttp.setCacheFileDir(value);
@@ -723,10 +772,14 @@ public class APlayerAndroid {
 	
 	public static class MediaInfo
 	{
-		public int width;
-		public int height;
-		public long duration_ms;
-		public byte[] bitMap;
+		public int 		width;
+		public int 		height;
+		public long 	duration_ms;
+		public long		file_size;
+		public long 	show_ms;
+		public boolean 	is_key_frame;
+		public int      avg_luma;       //亮度[0,255]
+		public byte[] 	bitMap;
 		
 		public static Bitmap byteArray2BitMap(byte[] bitMap){
 			Bitmap bitmap = BitmapFactory.decodeByteArray(bitMap, 0, bitMap.length);
@@ -749,13 +802,14 @@ public class APlayerAndroid {
 	public boolean isSupportRecord()
 	{
 		if(mDestroy)  return false;
-		
-		int retval = native_is_support_record(mObjId);
-		return (0 != retval);
+		int ret = native_is_support_record(mObjId);
+		return (0 != ret);
 	}
 	
 	public boolean startRecord(String outMediaPath)
 	{
+		Log.i(TAG,"startRecord");
+		
 		if(mDestroy)  return false;
 		
 		if(null == outMediaPath || outMediaPath.isEmpty()){
@@ -772,31 +826,45 @@ public class APlayerAndroid {
 		if(!isFolderExists(dirPath)){
 			return false;
 		}
-		
-		
-		int retval = native_start_record(outMediaPath, mObjId);
-		return (0 == retval);
-		
+
+		int ret = native_start_record(outMediaPath, mObjId);
+
+		return (1 == ret);
 	}
 	
 	public boolean isRecording()
 	{
 		if(mDestroy)  return false;
-		
-		int retval = native_is_recording(mObjId);
-		return (0 != retval);
+		int ret = native_is_recording(mObjId);
+		return (0 != ret);
 	}
 	
 	public void endRecord(){
+		Log.i(TAG,"endRecord");
+		
 		if(mDestroy)  return;
 		
 		native_end_record(mObjId);
+		Log.i(TAG,"endRecord leave");
 	}
 	
 	public void stopRead(boolean stopRead){
 		if(mDestroy) return;
 		
 		native_stop_read(stopRead,mObjId);
+	}
+
+	
+	protected synchronized HardwareEncoder getEncodeCore(){
+		if(mHardwareEncoder == null){
+			mHardwareEncoder = new HardwareEncoder();
+		}
+		return mHardwareEncoder;
+	}
+	
+	public void openLog(boolean openLog){
+		Log.setOpenLog(openLog);
+		this.native_openLog(openLog);
 	}
 	
 	private native int    native_open(String strPath,int objid);
@@ -846,20 +914,26 @@ public class APlayerAndroid {
 	private native int	  native_is_recording(int objid);
 	
 	private native int	  native_end_record(int objid);
-	
+
 	private native int    native_stop_read(boolean stopRead,int objid);
+
+	private native void   native_openLog(boolean openLog);
 	
-    private int openSuccess(){
+    private int openSuccess(){    	
 		mIsSuccess = true;
 		if(mIsAutoPlay){
-			Play();
+			play();
 		}
-		
+
 		if(mOnOpenSuccessListener != null){
 			mOnOpenSuccessListener.onOpenSuccess();
 		}
 		if(mOnOpenCompleteListener != null){
 			mOnOpenCompleteListener.onOpenComplete(true);
+		}
+
+		if(!isHwDecode()){
+			mUpdateSurfaceView = true;
 		}
 		return 1;
 	}
@@ -867,7 +941,6 @@ public class APlayerAndroid {
     private void stateChange(int preState,int curState,Object obj){		
 		if(preState == APlayerAndroid.PlayerState.APLAYER_CLOSEING &&
 		   curState == APlayerAndroid.PlayerState.APLAYER_READ){
-			
 			if(isHwDecode()){
 				mHwDecoder.stopCodec();
 			}
@@ -875,22 +948,21 @@ public class APlayerAndroid {
 			if(mOnPlayCompleteListener != null){
 				mOnPlayCompleteListener.onPlayComplete((String)obj);
 			}
-			
+				
 			if(((String)obj).equals(PlayCompleteRet.PLAYRE_RESULT_OPENRROR)){
 				if(mOnOpenCompleteListener != null){
 					mOnOpenCompleteListener.onOpenComplete(false);
 				}
 			}
-			
+				
 			if(mALocalFile != null){
-				SetConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "0");
+				setOnExtIOListerner(null);
 				mALocalFile = null;
 			}
-			
-			
-			Log.e(TAG, "Event mOnPlayCompleteListener result = " +(String)obj);
-		}
+				Log.e(TAG, "Event mOnPlayCompleteListener result = " +(String)obj);
+			}
 	}
+    
     
     public interface OnReCreateHwDecoderListener{
 		void onReCreateHwDecoder();
@@ -899,6 +971,7 @@ public class APlayerAndroid {
     	mOnReCreateHwDecoderListener = listener;
     }
     private OnReCreateHwDecoderListener mOnReCreateHwDecoderListener;
+    
     
     public interface OnFirstFrameRenderListener{
 		void onFirstFrameRender();
@@ -921,7 +994,7 @@ public class APlayerAndroid {
     public interface OnPlayStateChangeListener{
 		void onPlayStateChange(int nCurrentState,int nPreState);
 	}
-    public void setOnPlayStateChangeListener(OnPlayStateChangeListener listener){
+    public void setOnPlayStateChangeListener(OnPlayStateChangeListener listener) {
     	mOnPlayStateChangeListener = listener;
     }
     private OnPlayStateChangeListener mOnPlayStateChangeListener;
@@ -944,6 +1017,7 @@ public class APlayerAndroid {
     }
     private OnPlayCompleteListener mOnPlayCompleteListener;
     
+    
     public interface OnBufferListener{
    		void onBuffer(int progress);
    	}
@@ -963,7 +1037,7 @@ public class APlayerAndroid {
     
     
     public interface OnSurfaceDestroyListener{
-    	void OnSurfaceDestroy();
+    	void onSurfaceDestroy();
     }
     public void setOnSurfaceDestroyListener(OnSurfaceDestroyListener listener){
     	mOnSurfaceDestroyListener = listener;
@@ -972,34 +1046,70 @@ public class APlayerAndroid {
     
     
     public interface OnSystemPlayerFailListener{
-    	void OnSystemPlayerFail();
+    	void onSystemPlayerFail();
     }
     public void setOnSystemPlayerFailListener(OnSystemPlayerFailListener listener){
     	OnSystemPlayerFailListener = listener;
     }
     private OnSystemPlayerFailListener OnSystemPlayerFailListener;
     
-    
-    
-    
+
     public interface OnShowSubtitleListener{
-    	void OnShowSubtitle(String subtitle);
+    	void onShowSubtitle(String subtitle);
     }
     public void setOnShowSubtitleListener(OnShowSubtitleListener listener){
     	mOnShowSubtitleListener = listener;
     }
     private OnShowSubtitleListener mOnShowSubtitleListener;
 
+
     
+    public interface OnExtIOListerner{
+		int  open(String url);
+		int  close(String ret);
+		int  read(ByteBuffer byteBuf);
+		long seek(long offset, int whence);
+		int  abort(boolean isAbort);
+	}
     
+	protected void setOnExtIOListerner(OnExtIOListerner listener){
+		mOnExtIOListerner = listener;
+		if(listener != null){
+			setConfig(CONFIGID.EXTIO, "1");
+		}else{
+			setConfig(CONFIGID.EXTIO, "0");
+		}
+		
+	}
+	private OnExtIOListerner mOnExtIOListerner;
+	
+	
     
+	protected interface OnSurfaceChangeListener{
+		void onSurfaceChange(int width,int height);
+	}
+	protected void setOnSurfaceChangeListener(OnSurfaceChangeListener listener){
+		mOnSurfaceChangeListener = listener;
+	}
+	private OnSurfaceChangeListener mOnSurfaceChangeListener;
+
+	
+	protected int getViewSurfaceWidth(){
+		return mViewSurfaceWidth;
+	}
+
+	protected int getViewSurfaceHeight(){
+		return mViewSurfaceHeight;
+	}
+
+
     private void showSubtitle(CharSequence text)
     {    	
     	Log.e(TAG, "ShowSubtitle " + text.toString());
     	if(mSubtilteview == null)
     		createSubtitleView();
     
-    	if(mSubtilteview == null)
+    	if(mSubtilteview == null || mSubtitleShow.equalsIgnoreCase("0"))
     		return;
     	
     	mSubtilteview.setText(text);
@@ -1012,7 +1122,6 @@ public class APlayerAndroid {
     	if(lytp == null){
     		return;
     	}
-    	
     	lytp.topMargin    = mSubtitleViewTop - textViewHeight;
     	Log.e(TAG, "ShowSubtitle mSubtitleViewTop = " + mSubtitleViewTop + " textViewHeight =  " + textViewHeight);
     	mSubtilteview.setLayoutParams(lytp);
@@ -1076,190 +1185,116 @@ public class APlayerAndroid {
     	Log.i(TAG, "surface getInnerSurface");
     	while(true){
     		if(mSurface != null){
+				Log.i(TAG, "surface getInnerSurface over");
     			return mSurface;
     		}
     		try {
 				Thread.sleep(100);
 			} catch (Exception e) {
-				// TODO: handle exception
+				e.printStackTrace();
 			}
     	}
 	}
-    
-    private HardwareDecoder getHardwareDecoder(){
+
+   public HardwareDecoder getHardwareDecoder(){
+    	Log.i(TAG,"HardwareDecoder getHardwareDecoder");
 		return  mHwDecoder;
 	}
 
-	private static int callFNFindHardwareDecoder(Object mediaplayer_ref,int codeid){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if(amp != null && amp.getHardwareDecoder() != null){
-			return amp.getHardwareDecoder().FindHardWareDecoder(codeid);
+	public int renderTexture(int textureId){
+		if(mGpuImageFilter == null){
+			mGpuImageFilter = new GPUImageFilter(null);
+			mGpuImageFilter.init();
 		}
-		return -1;
-	}
 
-	private static int callFNCreateHardwareDecoder(Object mediaplayer_ref,Object csd){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		ByteBuffer bbcsd = (ByteBuffer)csd;
-		if(amp != null && amp.getHardwareDecoder() != null){
-			return  amp.getHardwareDecoder().CreateCodec(bbcsd);
-		}
-		return -1;
-	}
 
-	private static int callFNHardwareDecode(Object mediaplayer_ref,Object bufIn,long timeSample,Object bufOut){
-		ByteBuffer bBufIn = (ByteBuffer)bufIn;
-		ByteBuffer bBufOut = (ByteBuffer)bufOut;
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if(amp != null && amp.getHardwareDecoder() != null){
-			return  amp.getHardwareDecoder().Decode(bBufIn, timeSample, bBufOut);
-		}
-		return -1;
-	}
+		int vertexNum = 6;
 
-	private static int callFNFlushHardwareDecoder(Object mediaplayer_ref){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if(amp != null && amp.getHardwareDecoder() != null){
-			amp.getHardwareDecoder().FlushCodec();
-		}
+		float[] vertexCoordinate  = {1.0f, -1.0f,  0.0f,
+				1.0f,  1.0f,  0.0f,
+				-1.0f,  1.0f,  0.0f,
+				-1.0f,  1.0f,  0.0f,
+				-1.0f, -1.0f,  0.0f,
+				1.0f, -1.0f,  0.0f};
+
+		ByteBuffer bbVertices = ByteBuffer.allocateDirect(vertexNum * 3 * 4);
+		bbVertices.order(ByteOrder.nativeOrder());
+		FloatBuffer vertexBuf = bbVertices.asFloatBuffer();
+		vertexBuf.put(vertexCoordinate);
+		vertexBuf.position(0);
+
+		float[] textureCoordinate1  = {1.0f, 1.0f,
+				1.0f, 0.0f,
+				0.0f, 0.0f,
+				0.0f, 0.0f,
+				0.0f, 1.0f,
+				1.0f, 1.0f};
+
+
+		ByteBuffer bbColors1 = ByteBuffer.allocateDirect(vertexNum * 2 * 4);
+		bbColors1.order(ByteOrder.nativeOrder());
+		FloatBuffer textureCoordinateBuf = bbColors1.asFloatBuffer();
+		textureCoordinateBuf.put(textureCoordinate1);
+		textureCoordinateBuf.position(0);
+
+
+		mGpuImageFilter.draw(textureId,vertexBuf,textureCoordinateBuf);
 		return 1;
 	}
-	
-	private static int callFNCloseHardwareDecoder(Object mediaplayer_ref){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if(amp != null && amp.getHardwareDecoder() != null){
-			amp.getHardwareDecoder().stopCodec();
-		}
-		return 1;
-	}
-    
-	
-	private static int callFNAhttpOpen(Object mediaplayer_ref,Object url){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if(amp != null){
-			
-			if(amp.mALocalFile != null){
-				return amp.mALocalFile.open();
-			}
-			
-			if(amp.mAHttp == null){
-				amp.mAHttp = new AHttp();
-			}
-			
-			if(amp.mAHttp != null){
-				return amp.mAHttp.open((String)url);
-			}
-		}
-		return -1;
+
+	protected int getAndroidLevel(){
+		Log.i(TAG,"getAndroidLevel");
+
+		return  Build.VERSION.SDK_INT;
 	}
 
-	private static int callFNAhttpClose(Object mediaplayer_ref){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		
-		if(amp != null && amp.mALocalFile != null){
-			return amp.mALocalFile.close();
-		}
-		
-		if(amp != null && amp.mAHttp != null){
-			return amp.mAHttp.close();
-		}
-		return -1;
-	}
-	
-	private static int callFNAhttpRead(Object mediaplayer_ref,Object bufOut){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		
-		if(amp != null && amp.mALocalFile != null){
-			return amp.mALocalFile.read(bufOut);
-		}
-		
-		if(amp != null && amp.mAHttp != null){
-			return amp.mAHttp.read(bufOut);
-		}
-		return  -1;
-	}
-	
-	private static long callFNAhttpSeek(Object mediaplayer_ref,long offset, int whence){
-		APlayerAndroid amp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		
-		if(amp != null && amp.mALocalFile != null){
-			return amp.mALocalFile.seek(offset,whence);
-		}
-		
-		if(amp != null && amp.mAHttp != null){
-			return amp.mAHttp.seek(offset,whence);
-		}
-		return  -1;
-	}
-	
-    private OnTouchListener onTouchListener = new OnTouchListener() {
-        float lastX, lastY;
-        float angleX, angleY;
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                break;
-
-            case MotionEvent.ACTION_POINTER_DOWN:
-                break;
-
-            case MotionEvent.ACTION_POINTER_UP:
-                break;
-
-            case MotionEvent.ACTION_UP:
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-            	float dx = event.getRawX() - lastX;
-                float dy = event.getRawY() - lastY;
-
-                float a = 180.0f / 320;
-                
-                angleX += dx * a;
-                angleY += (dy * a / 2);
-                if(angleY > 90.0)
-                	angleY = 90.0f;
-                if(angleY < -90.0)
-                	angleY = 90.0f;
-                
-                Log.e(TAG, "move anglex = " + angleX);
-                Log.e(TAG, "move angley = " + angleY);
-                String angle = angleX + ";" + angleY; 
-                if(mDestroy) return true;
-                native_setconfig(CONFIGID.VR_ROTATE,angle,mObjId);
-                break;
-            }
-
-            lastX = (int) event.getRawX();
-            lastY = (int) event.getRawY();
-            return true;
-        }
-    };
-    
-    private static void postEventFromNative(Object mediaplayer_ref,
-            int what, int arg1, int arg2, Object obj){
+    private int extIOOpen(String url){
+    	if(mOnExtIOListerner != null)
+    		return mOnExtIOListerner.open(url);
     	
-    	if(mediaplayer_ref == null){
-    		return;
+    	return 0;
+    }
+	
+    private int extIOClose(String ret){
+    	if(mOnExtIOListerner != null){
+    		mOnExtIOListerner.close(ret);
+        	return 1;
     	}
     	
-	  	APlayerAndroid mp = (APlayerAndroid)((WeakReference)mediaplayer_ref).get();
-		if (mp == null) {
-			return;
+    	return 0;
+    }
+    
+    private int extIORead(ByteBuffer byteBuf){
+    	if(mOnExtIOListerner != null)
+    		return mOnExtIOListerner.read(byteBuf);
+    	
+    	return 0;
+    }
+    
+    private long extIOSeek(int whence,long offset){
+    	if(mOnExtIOListerner != null)
+    		return mOnExtIOListerner.seek(offset, whence);
+    	
+    	return 0;
+    }
+
+    private int  extIOAbort(boolean isAbort){
+		if(mOnExtIOListerner != null)
+			return mOnExtIOListerner.abort(isAbort);
+
+		return 0;
+	}
+
+    private int postEventFromNative(int what, int arg1, int arg2, Object obj){
+    	Message m = mEventHandler.obtainMessage(what, arg1, arg2, obj);
+		if(m == null){
+			return 0;
 		}
-	
-		if (mp.mEventHandler != null) 
-		{
-			Message m = mp.mEventHandler.obtainMessage(what, arg1, arg2, obj);
-			if(m == null){
-				return;
-			}
-			m.arg1 = arg1;
-			m.arg2 = arg2;
-			m.obj  = obj;
-			mp.mEventHandler.sendMessage(m);
-		}
+		m.arg1 = arg1;
+		m.arg2 = arg2;
+		m.obj  = obj;
+		mEventHandler.sendMessage(m);
+		return 1;
 	}
     
     private class EventHandler extends Handler{
@@ -1300,13 +1335,14 @@ public class APlayerAndroid {
 					String text = (String)msg.obj;
 					text = subtitleFormat(text);
 					if(mOnShowSubtitleListener != null){
-						mOnShowSubtitleListener.OnShowSubtitle(text);
+						mOnShowSubtitleListener.onShowSubtitle(text);
 					}
 					if(!mSubtitleShowExternal)
-						showSubtitle(text);
+					showSubtitle(text);
 				}
 				break;
-			case MsgID.FRIST_FRAME_RENDER:
+			case MsgID.FRIST_VIDEO_FRAME_RENDER:
+				Log.i(TAG,"Message FRIST_VIDEO_FRAME_RENDER");
 				if(mOnFirstFrameRenderListener != null){
 					mOnFirstFrameRenderListener.onFirstFrameRender();
 				}
@@ -1357,7 +1393,7 @@ public class APlayerAndroid {
 		public static final int SEEK_COMPLETE			= 6;
 		public static final int GET_BUFFERPRO          	= 102;
 		public static final int SHOW_SUBTITLE           = 103;
-		public static final int FRIST_FRAME_RENDER      = 104;
+		public static final int FRIST_VIDEO_FRAME_RENDER = 104;
 	}
 	
 	public class Orientation
@@ -1395,10 +1431,10 @@ public class APlayerAndroid {
 	{
 		public static final int PLAYRESULT          	= 7;
 		public static final int AUTO_PLAY               = 8;
+		public static final int EXTIO          			= 14;
 		public static final int READPOSITION   			= 31;
 		public static final int UPDATEWINDOW        	= 40;		
 		public static final int ORIENTATION   			= 41;
-		public static final int RECOR_DMODE   			= 42;
 		public static final int PLAY_SPEED              = 104;
 		public static final int ASPECT_RATIO_NATIVE     = 203;
 		public static final int ASPECT_RATIO_CUSTOM     = 204;
@@ -1435,11 +1471,18 @@ public class APlayerAndroid {
 		public static final int VR_ENABLE 				= 2401;
 		public static final int VR_ROTATE 				= 2411;
 		public static final int VR_FOVY					= 2412;
+		public static final int VR_MODEL				= 2413;
 		public static final int VR_ENABLE_INNER_TOUCH_ROTATE  = 2414;
+		public static final int VR_DISTORTION_CORRECTION      = 2415;
+		
+		public static final int SEEK_ENABLE  			= 3000;
+		
+		public static final int RECORD_BIT              = 4000;
+		public static final int RECORD_WIDTH            = 4001;
+		public static final int RECORD_HEIGHT           = 4002;
 	}
 	
-	
-	private class ALocalFile{
+	private class ALocalFile implements OnExtIOListerner{
 		private FileDescriptor   		mFileDescriptor   		= null;
 		private FileChannel				mFileChannel            = null;
 		private FileInputStream 		mFileInputStream        = null;
@@ -1451,7 +1494,7 @@ public class APlayerAndroid {
 			mFileDescriptor = fileDescriptor;
 		}
 		
-		public synchronized int open(){
+		public synchronized int open(String url){
 			Log.i(TAG, "ALocalFile open");
 			
 			mCurPos = 0;
@@ -1477,7 +1520,7 @@ public class APlayerAndroid {
 			return -1;
 		}
 		
-		public int close(){
+		public int close(String ret){
 			if(mFileChannel != null){
 				try {
 					mFileChannel.close();
@@ -1496,9 +1539,8 @@ public class APlayerAndroid {
 			return 1;
 		}
 		
-		public int read(Object bufOut){
+		public int read(ByteBuffer bbfout){
 			synchronized(mFileChannel){
-				ByteBuffer bbfout = ((ByteBuffer) bufOut);
 				bbfout.position(0);
 				int readByte = 0;
 				try {
@@ -1554,7 +1596,9 @@ public class APlayerAndroid {
 			}
 		}
 		
-		
+		public int  abort(boolean isAbort){
+			return 0;
+		}
 	}
 	
 	private class SystemMediaPlay{
@@ -1668,7 +1712,7 @@ public class APlayerAndroid {
         		Log.i(TAG,"SystemMediaPlay IOException: " + e.toString());
         		
         		if(OnSystemPlayerFailListener != null){
-        			OnSystemPlayerFailListener.OnSystemPlayerFail();
+        			OnSystemPlayerFailListener.onSystemPlayerFail();
         		}
         		
         		release();
@@ -1776,7 +1820,7 @@ public class APlayerAndroid {
     		int ret = native_open(mMediaPath,mObjId);
     		
     		if(OnSystemPlayerFailListener != null){
-    			OnSystemPlayerFailListener.OnSystemPlayerFail();
+    			OnSystemPlayerFailListener.onSystemPlayerFail();
     		}
     		
     		return ret;

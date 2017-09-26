@@ -50,8 +50,12 @@ public class HomeFragment extends XFragment {
     int           mRequestNum = 0;
     boolean       mIsInitChannel = false;
 
+    class ChannelItem{
+        public String channelName;
+        public int    channelId;
+    }
     class Channel{
-        private String[] channels;
+        private ChannelItem[] channels;
     }
 
     @Override
@@ -124,13 +128,17 @@ public class HomeFragment extends XFragment {
 
         @Override
         public void onResponse(Channel response, int id) {
-            titles = response.channels;
+            titles  = new String[response.channels.length];
+            for(int i = 0;i < response.channels.length;i++){
+                titles[i] = response.channels[i].channelName;
+            }
+            //titles = response.channels;
 
             fragmentList.clear();
 
-            for (int i = 0;i < titles.length;i++){
+            for (int i = 0;i < response.channels.length;i++){
                 ShortVideoFragment shortVideoFragment = ShortVideoFragment.newInstance();
-                shortVideoFragment.setType(i);
+                shortVideoFragment.setType(response.channels[i].channelId);
                 fragmentList.add(shortVideoFragment);
             }
             initPageView();

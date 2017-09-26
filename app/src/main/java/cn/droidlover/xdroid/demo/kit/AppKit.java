@@ -177,6 +177,14 @@ public class AppKit {
         return  width;
     }
 
+    public static int getScreenHeight(){
+        WindowManager manager = (WindowManager) App.getContext().getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(outMetrics);
+        int width = outMetrics.heightPixels;
+        return  width;
+    }
+
     public static String getCurrentTime(){
         SimpleDateFormat    sDateFormat    =   new SimpleDateFormat("yyyy-MM-dd HH:mm");
         sDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));

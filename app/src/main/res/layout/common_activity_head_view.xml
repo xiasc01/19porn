@@ -27,6 +27,8 @@
             android:textSize="20sp"
             android:layout_weight="0.80"
             android:textAlignment="center"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:textColor="@color/black" />
     </FrameLayout>
 
