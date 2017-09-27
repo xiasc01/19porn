@@ -1,5 +1,6 @@
 package cn.droidlover.xdroid.demo;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -188,6 +189,27 @@ public class VideoManager extends Thread {
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("request_type","modify_movie_info");
         params.put("movie_id",movieId);
+
+        MovieInfo.Item  movieItem = mMovies.get(movieId);
+        for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
+            if(entry.getKey().equals("title")){
+                movieItem.setTitle(entry.getValue());
+            }
+            if(entry.getKey().equals("score")){
+                movieItem.setScore(entry.getValue());
+            }
+            if(entry.getKey().equals("pic_score")){
+                movieItem.setPic_score(entry.getValue());
+            }
+            if(entry.getKey().equals("value")){
+                movieItem.setValue(entry.getValue());
+            }
+            if(entry.getKey().equals("sub_type1")){
+                movieItem.setSub_type1(entry.getValue());
+            }
+        }
+
+        mDbManager.update(movieId,modifyMovieInfos);
 
         for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
             Log.i(App.TAG,"modifyMovieInfo Key = " + entry.getKey() + ", Value = " + entry.getValue());
@@ -456,6 +478,36 @@ public class VideoManager extends Thread {
                 db.endTransaction();    //结束事务
             }
             return results;
+        }
+
+        public void update(String movieId, Map<String,String> modifyMovieInfos){
+            /*String sql = "update video_info set ";
+            int i = 0;
+            Object[] arg = new Object[modifyMovieInfos.size() + 1];
+            for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
+                Log.i(App.TAG,"modifyMovieInfo Key = " + entry.getKey() + ", Value = " + entry.getValue());
+                //params.put(entry.getKey(),entry.getValue());
+                if(i != 0){
+                    sql = sql + ",";
+                }
+                sql = sql + entry.getKey() + " = ?";
+                arg[i] = entry.getValue();
+                i++;
+            }
+            sql = sql + " where movieid = ?";
+            arg[i] = movieId;
+            db.beginTransaction();
+            db.execSQL(sql,arg);
+            db.setTransactionSuccessful();
+            db.endTransaction();*/
+            ContentValues cv = new ContentValues();
+            for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
+                cv.put(entry.getKey(), entry.getValue());
+            }
+
+            String[] args = {movieId};
+
+            db.update("video_info",cv,"movie_id=?",args);
         }
 
         public List<MovieInfo.Item> query(String videoType) {

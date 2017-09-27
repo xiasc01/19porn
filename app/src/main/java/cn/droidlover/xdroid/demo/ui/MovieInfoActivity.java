@@ -61,7 +61,7 @@ public class MovieInfoActivity extends XActivity {
         content.setText(item.getScore());
         pic.setText(item.getPic_score());
         value.setText(item.getValue());
-
+        subType.setText(item.getSub_type1());
 
         title.addTextChangedListener(new TextWatcher() {
             @Override

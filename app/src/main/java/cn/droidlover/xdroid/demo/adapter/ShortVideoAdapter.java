@@ -65,7 +65,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.valueIcon.setVisibility(View.GONE);
 
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)holder.layoutMulItem.getLayoutParams();
-            layoutParams.width = 1080;
+            layoutParams.width = AppKit.getScreenWidth();
             layoutParams.height = 9 * layoutParams.width / 16;
             holder.layoutMulItem.setLayoutParams(layoutParams);
 
