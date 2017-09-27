@@ -55,7 +55,7 @@ public class HomeFragment extends XFragment {
         public int    channelId;
     }
     class Channel{
-        private ChannelItem[] channels;
+        public ChannelItem[] channels;
     }
 
     @Override
@@ -132,7 +132,6 @@ public class HomeFragment extends XFragment {
             for(int i = 0;i < response.channels.length;i++){
                 titles[i] = response.channels[i].channelName;
             }
-            //titles = response.channels;
 
             fragmentList.clear();
 

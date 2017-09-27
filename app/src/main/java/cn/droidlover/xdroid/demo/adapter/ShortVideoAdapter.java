@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -61,6 +62,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.ivGirl.setVisibility(View.GONE);
             holder.layoutMulItem.setVisibility(View.VISIBLE);
             holder.playBtn.setVisibility(View.GONE);
+            holder.valueIcon.setVisibility(View.GONE);
 
             RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)holder.layoutMulItem.getLayoutParams();
             layoutParams.width = 1080;
@@ -77,7 +79,12 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     if(i == 3) setImage(subItem,holder.ivThumb4);
                 }
             }
-            holder.title.setText(item.getSet_name());
+            //holder.title.setTextColor(0xff33b5e5);
+            holder.title.setText("合集："+ item.getSet_name());
+            holder.value.setText(movies.size() + " 个视频");
+            holder.value.setTextSize(12);
+            holder.value.setTextColor(0xff33b5e5);
+            holder.value.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
 
             holder.layoutMulItem.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -93,6 +100,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.ivGirl.setVisibility(View.VISIBLE);
             holder.layoutMulItem.setVisibility(View.GONE);
             holder.playBtn.setVisibility(View.VISIBLE);
+            holder.valueIcon.setVisibility(View.VISIBLE);
+            holder.value.setText(item.getValue());
 
             if(item.getMovie_id() == null || item.getThumb_key() == null){
                 Log.e(App.TAG,"onBindViewHolder movie is null");
@@ -116,7 +125,6 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         }
 
         holder.duration.setText(item.getFormatDuration());
-        holder.value.setText(item.getValue());
         holder.contentScore.setText("内容 " + item.getScore());
         holder.picScore.setText("画质 " + item.getPic_score());
         if(item.getSub_type1() != null && item.getSub_type1().length() > 0){
