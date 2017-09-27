@@ -482,7 +482,7 @@ public class AHttp  implements OnExtIOListerner
 					if(!closeHttpFile() || !openHttpFile(mUrlPath,mSeekHttpPos)){
 						errorCnt++;
 						Log.e(TAG,"InterHttp:: closeHttpFile or openHttpFile is fail");
-						try { Thread.sleep(10 * 1000); } catch (Exception e) {}
+						try { Thread.sleep(1000); } catch (Exception e) {}
 						continue;
 					}
 					Log.i(TAG,"InterHttp:: seek over");
@@ -498,7 +498,7 @@ public class AHttp  implements OnExtIOListerner
 					if(!openHttpFile(mUrlPath,pos)){
 						errorCnt++;
 						Log.e(TAG,"InterHttp:: openHttpFile is fail");
-						try { Thread.sleep(10 * 1000); } catch (Exception e) {}
+						try { Thread.sleep(1000); } catch (Exception e) {}
 						continue;
 					}
 					synchronized (mLockObject){

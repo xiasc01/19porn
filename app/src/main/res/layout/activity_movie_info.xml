@@ -26,7 +26,7 @@
             android:layout_marginRight="10dp"
             android:layout_weight="1"
             android:gravity="right"
-            android:text="asdfsadfsadfsad" />
+            android:text="" />
 
     </LinearLayout>
 
@@ -51,7 +51,7 @@
             android:layout_weight="1"
             android:gravity="right"
             android:layout_marginRight="10dp"
-            android:text="asdfsadfsadfsad" />
+            android:text="" />
 
     </LinearLayout>
 
@@ -176,7 +176,7 @@
             android:layout_weight="1"
             android:gravity="right"
             android:layout_marginRight="10dp"
-            android:text="asdfsadfsadfsad" />
+            android:text="" />
 
     </LinearLayout>
 
