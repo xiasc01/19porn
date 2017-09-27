@@ -22,7 +22,6 @@ import cn.droidlover.xdroid.demo.kit.ThumbLoad;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.net.NetApi;
-import cn.droidlover.xdroid.demo.ui.MovieInfoActivity;
 import okhttp3.Call;
 
 /**
@@ -31,13 +30,13 @@ import okhttp3.Call;
 
 public class VideoManager extends Thread {
 
-    private DBManager mDbManager                           =  null;
-    private User      mUser                                =  null;
-    private int       mReConnectNum                        =  0;
-    private Map<String,MovieInfo.Item>  mMovies            = new HashMap<String,MovieInfo.Item>();
-    private Map<String,List<MovieInfo.Item> > mMovieSets   = new HashMap<String,List<MovieInfo.Item>>();
-    private Map<String ,List<MovieInfo.Item> > mTypeMovies = new HashMap<String,List<MovieInfo.Item> >();
-    private Map<String,ImageView>  mThumbImageView         = new HashMap<String,ImageView>();
+    private DBManager mDbManager                            =  null;
+    private User      mUser                                 =  null;
+    private int       mReConnectNum                         =  0;
+    private Map<String,MovieInfo.Item>  mMovies             = new HashMap<String,MovieInfo.Item>();
+    private Map<String,List<MovieInfo.Item> > mMovieSeries = new HashMap<String,List<MovieInfo.Item>>();
+    private Map<String ,List<MovieInfo.Item> > mTypeMovies  = new HashMap<String,List<MovieInfo.Item> >();
+    private Map<String,ImageView>  mThumbImageView          = new HashMap<String,ImageView>();
 
     private String mCurrentType   = "0";
     private int mLastType      = 0;
@@ -133,7 +132,7 @@ public class VideoManager extends Thread {
                         mMovieThumbCaches.put(item.getMovie_id(),thumbCache);
 
                         if(item.getSet_name() != null && item.getSet_name().length() > 0){
-                            List<MovieInfo.Item> movieSets = mMovieSets.get(item.getSet_name());
+                            List<MovieInfo.Item> movieSets = mMovieSeries.get(item.getSet_name());
                             for(int j = 1;j < 4 && j < movieSets.size();j++){
                                 MovieInfo.Item itemSet = movieSets.get(j);
 
@@ -167,7 +166,20 @@ public class VideoManager extends Thread {
             }*/
             getVideosFromLocal(videoType,callback);
         }else {
-            getVideosFromServer(videoType,id,callback);
+            getVideosFromServer(videoType,null,id,callback);
+        }
+    }
+
+    public void getSeriesVideos(String seriesName,int startId,final JsonCallback<MovieInfo> callback){
+        if(startId == -1){
+            if(mMovieSeries.containsKey(seriesName)){
+                List<MovieInfo.Item> movies = mMovieSeries.get(seriesName);
+                MovieInfo movieInfo = new MovieInfo();
+                movieInfo.setResults(movies);
+                callback.onResponse(movieInfo,0);
+            }
+        }else{
+            getVideosFromServer(0,seriesName,startId,callback);
         }
     }
 
@@ -238,8 +250,8 @@ public class VideoManager extends Thread {
     }
 
     public List<MovieInfo.Item> getMovieSet(String setName){
-        if(mMovieSets.containsKey(setName)){
-            return mMovieSets.get(setName);
+        if(mMovieSeries.containsKey(setName)){
+            return mMovieSeries.get(setName);
         }
         return null;
     }
@@ -277,15 +289,15 @@ public class VideoManager extends Thread {
             }
 
             if(item.getSet_name() != null && item.getSet_name().length() > 0){
-                if(mMovieSets.containsKey(item.getSet_name())){
-                    List<MovieInfo.Item>movieItems = mMovieSets.get(item.getSet_name());
+                if(mMovieSeries.containsKey(item.getSet_name())){
+                    List<MovieInfo.Item>movieItems = mMovieSeries.get(item.getSet_name());
                     movieItems.add(item);
                 }else{
                     movie2s.add(item);
                     movie3s.add(item);
                     List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
                     movieItems.add(item);
-                    mMovieSets.put(item.getSet_name(),movieItems);
+                    mMovieSeries.put(item.getSet_name(),movieItems);
                 }
             }else{
                 movie2s.add(item);
@@ -299,14 +311,14 @@ public class VideoManager extends Thread {
         return movie2s.size() > 0;
     }
 
-    private void getVideosFromServer(final int videoType, final int id_index, final JsonCallback<MovieInfo> callback){
+    private void getVideosFromServer(final int videoType,final String seriesVideoName,final int id_index, final JsonCallback<MovieInfo> callback){
         final JsonCallback<MovieInfo>  localCallback =  new JsonCallback<MovieInfo>() {
             @Override
             public void onFail(Call call, Exception e, int id) {
                 if(e instanceof SocketTimeoutException && mReConnectNum < 5){
                     mReConnectNum++;
                     AppKit.updateServerUrl();
-                    getVideosFromServer(videoType,id_index,callback);
+                    getVideosFromServer(videoType,seriesVideoName,id_index,callback);
                 }else {
                     callback.onFail(call,e,id);
                     mReConnectNum = 0;
@@ -335,25 +347,29 @@ public class VideoManager extends Thread {
                         }
 
                         if(item.getSet_name() != null && item.getSet_name().length() > 0){
-                            if(mMovieSets.containsKey(item.getSet_name())){
-                                List<MovieInfo.Item>movieItems = mMovieSets.get(item.getSet_name());
+                            if(mMovieSeries.containsKey(item.getSet_name())){
+                                List<MovieInfo.Item>movieItems = mMovieSeries.get(item.getSet_name());
                                 movieItems.add(item);
                             }else{
                                 movie2s.add(item);
                                 movie3s.add(item);
                                 List<MovieInfo.Item>movieItems = new ArrayList<MovieInfo.Item>();
                                 movieItems.add(item);
-                                mMovieSets.put(item.getSet_name(),movieItems);
+                                mMovieSeries.put(item.getSet_name(),movieItems);
                             }
                         }else{
                             movie2s.add(item);
                             movie3s.add(item);
                         }
                     }
-
                     MovieInfo movieInfo = new MovieInfo();
-                    movieInfo.setResults(movie2s);
+                    if(seriesVideoName != null && seriesVideoName.length() > 0){
+                        movieInfo.setResults(mMovieSeries.get(seriesVideoName));
+                    }else{
+                        movieInfo.setResults(movie2s);
+                    }
                     callback.onResponse(movieInfo,id);
+
                 }
                 mReConnectNum = 0;
             }
@@ -365,6 +381,10 @@ public class VideoManager extends Thread {
         params.put("signature", User.getInstance().getSignature());
         params.put("video_type","" + videoType);
         params.put("id_index","" + id_index);
+        if(seriesVideoName != null && seriesVideoName.length() > 0){
+            params.put("series_video_name","" + seriesVideoName);
+        }
+
 
         NetApi.invokeGet(params,localCallback);
     }
