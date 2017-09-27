@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Environment;
@@ -14,7 +15,11 @@ import android.view.View;
 import android.widget.ImageButton;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import butterknife.BindView;
@@ -22,6 +27,16 @@ import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.ui.CommonActivityHeadView;
 import cn.droidlover.xdroid.demo.ui.ImageText;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+
+import static android.graphics.Color.WHITE;
+import static android.graphics.Color.BLACK;
 
 public class InvitationActivity extends XActivity implements View.OnClickListener{
 
@@ -46,10 +61,23 @@ public class InvitationActivity extends XActivity implements View.OnClickListene
         headView.setTitle("邀请");
 
 
+        //MultiFormatWriter writer = new MultiFormatWriter();
+
         String strDlgTitle = "对话框标题 - 分享文字";
         String strSubject = "我的主题";
-        String strContent = "我的分享内容";
+        String strContent = "http://l.dahaiwenhua.com/APlayerAndroid.apk";
+        Bitmap bitmap = null;
+        try {
+            bitmap = createQRCode(strContent,480);
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
 
+        try {
+            saveBitmap(bitmap,"");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //getShareAppList();
 
         btnShareQQ.setOnClickListener(this);
@@ -60,7 +88,7 @@ public class InvitationActivity extends XActivity implements View.OnClickListene
         /**
          * 1.分享纯文字内容
          */
-        //shareText(strDlgTitle, strSubject, strContent);
+        shareText(strDlgTitle, strSubject, strContent);
 
         /**
          * 2.分享图片和文字内容
@@ -68,11 +96,11 @@ public class InvitationActivity extends XActivity implements View.OnClickListene
         strDlgTitle = "对话框标题 - 分享图片";
         // 图片文件路径（SD卡根目录下“1.png”图片）
         String imgPath = Environment.getExternalStorageDirectory().getPath()
-                + File.separator + "test.png";
+                + File.separator + "test2.png";
         // 图片URI
         Uri imageUri = Uri.fromFile(new File(imgPath));
         // 分享
-        shareImg(strDlgTitle, strSubject, strContent, imageUri);
+        //shareImg(strDlgTitle, strSubject, strContent, imageUri);
     }
 
     public List<ResolveInfo> getShareApps(Context context) {
@@ -212,5 +240,56 @@ public class InvitationActivity extends XActivity implements View.OnClickListene
     @Override
     public int getLayoutId() {
         return R.layout.activity_invitation;
+    }
+
+    private Bitmap createQRCode(String str, int widthAndHeight)
+            throws WriterException {
+        Hashtable<EncodeHintType, String> hints = new Hashtable<EncodeHintType, String>();
+        hints.put(EncodeHintType.CHARACTER_SET, "utf-8");// 使用utf8编码
+        BitMatrix matrix = new MultiFormatWriter().encode(str,
+                BarcodeFormat.QR_CODE, widthAndHeight, widthAndHeight, hints);// 这里需要把hints传进去，否则会出现中文乱码
+        int width = matrix.getWidth();
+        int height = matrix.getHeight();
+        int[] pixels = new int[width * height];
+
+        // 上色，如果不做保存二维码、分享二维码等功能，上白色部分可以不写。至于原因，在生成图片的时候，如果没有指定颜色，其会使用系统默认颜色来上色，很多情况就会出现保存的二维码图片全黑
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (matrix.get(x, y)) {// 有数据的像素点使用黑色
+                    pixels[y * width + x] = BLACK;
+                } else {// 其他部分则使用白色
+                    pixels[y * width + x] = WHITE;
+                }
+            }
+        }
+        //生成bitmap
+        Bitmap bitmap = Bitmap.createBitmap(width, height,
+                Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+        return bitmap;
+    }
+
+    private void saveBitmap(Bitmap bitmap,String bitName) throws IOException
+    {
+        String imgPath = Environment.getExternalStorageDirectory().getPath()
+                + File.separator + "test2.png";
+        File file = new File(imgPath);
+        if(file.exists()){
+            file.delete();
+        }
+        FileOutputStream out;
+        try{
+            out = new FileOutputStream(file);
+            if(bitmap.compress(Bitmap.CompressFormat.PNG, 90, out)){
+                out.flush();
+                out.close();
+            }
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
