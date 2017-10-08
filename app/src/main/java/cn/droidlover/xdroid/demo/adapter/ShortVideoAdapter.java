@@ -8,12 +8,14 @@ import android.graphics.Color;
 import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -54,7 +56,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         final  MovieInfo.Item item = data.get(position);
 
         if(item.getSet_name() != null && item.getSet_name().length() > 0 && !isSeriesVideoAdapter){
@@ -103,13 +105,13 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.ivGirl.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    startPlay(item);
+                    startPlay(item,holder);
                 }
             });
 
             holder.playBtn.setOnClickListener(new ImageButton.OnClickListener(){
                 public void onClick(View v) {
-                    startPlay(item);
+                    startPlay(item,holder);
                 }
             });
             holder.title.setText(item.getTitle());
@@ -119,6 +121,18 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         holder.value.setText(item.getValue());
         holder.contentScore.setText("内容 " + item.getScore());
         holder.picScore.setText("画质 " + item.getPic_score());
+        if(item.getPraise() != null){
+            holder.praiseText.setText(item.getPraise());
+        }else{
+            VideoManager.getInstance().getVideoPraise(item.getMovie_id(), new User.GetVideoPraiseCallback() {
+                @Override
+                public void onGetVideoPraise(String praise) {
+                    holder.praiseText.setText(praise);
+                    item.setPraise(praise);
+                }
+            });
+        }
+
         if(item.getSub_type1() != null && item.getSub_type1().length() > 0){
             holder.subType.setText(item.getSub_type1());
         }else{
@@ -127,20 +141,51 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         }
 
 
-        if(item.getHasPlay()){
+        if(VideoManager.getInstance().hasCache(item.getMovie_id())){
             holder.title.setTextColor(Color.argb(250,200, 200, 200));
             holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
+        }else{
+            holder.title.setTextColor(Color.argb(255,255, 255, 255));
+            holder.valueIcon.setImageResource(R.mipmap.pay_diamond);
+        }
+
+        if(item.getIsPraise().equals("1")){
+            holder.praiseBtn.setImageResource(R.mipmap.res_click_good_hover);
+        }else {
+            holder.praiseBtn.setImageResource(R.mipmap.res_click_good_normal);
         }
 
         holder.praiseBtn.setOnClickListener(new ImageButton.OnClickListener(){
             public void onClick(View v) {
                 ((ImageButton)v).setImageResource(R.mipmap.res_click_good_hover);
+                if(item.getIsPraise().equals("0")){
+                    VideoManager.getInstance().addVideoPraise(item.getMovie_id());
+                    item.setIsPraise("1");
+                    if(item.getPraise() == null){
+                        item.setPraise("1");
+                    }else{
+                        int praise = Integer.parseInt(item.getPraise());
+                        item.setPraise((praise + 1) + "");
+                        holder.praiseText.setText((praise + 1) + "");
+                    }
+
+                }
             }
         });
+
+        if(item.getIsEnshrine().equals("1")){
+            holder.enshrineBtn.setImageResource(R.mipmap.a6e);
+        }else{
+            holder.enshrineBtn.setImageResource(R.mipmap.a6d);
+        }
 
         holder.enshrineBtn.setOnClickListener(new ImageButton.OnClickListener(){
             public void onClick(View v) {
                 ((ImageButton)v).setImageResource(R.mipmap.a6e);
+                if(item.getIsEnshrine().equals("0")){
+                    VideoManager.getInstance().setIsEnshrine(item.getMovie_id());
+                    item.setIsEnshrine("1");
+                }
             }
         });
 
@@ -156,30 +201,34 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         });
     }
 
-    class GetPlayUrlResult{
-        boolean state;
-        String  url;
-        String  info;
+    public class GetPlayUrlResult{
+        public boolean state;
+        public String  msg;
+        public String  url;
     }
 
-    private void startPlay(final MovieInfo.Item item){
+    private void startPlay(final MovieInfo.Item item,final ViewHolder holder){
         final Intent intent = new Intent((Activity)context, PlayerActivity.class);
-
-        final ShortVideoAdapter shortVideoAdapter = this;
 
         VideoManager.getInstance().getPlayUrl(item.getMovie_id(), new User.GetPlayUrlCallback() {
             @Override
-            public void onGetPlayUrl(String url) {
-                if(url != null && url.length() > 4){
-                    intent.putExtra(PlayerActivity.VIDEO_FILE_PATH, url);
+            public void onGetPlayUrl(GetPlayUrlResult result) {
+                if(result.state){
+                    holder.title.setTextColor(Color.argb(250,200, 200, 200));
+                    holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
+
+                    intent.putExtra(PlayerActivity.VIDEO_FILE_PATH, result.url);
                     intent.putExtra(PlayerActivity.VIDEO_FILE_NAME, item.getTitle());
                     intent.putExtra(PlayerActivity.VIDEO_CACHE_PATH, AppKit.getMediaCachePath());
                     context.startActivity(intent);
 
-                    int pos = shortVideoAdapter.data.indexOf(item);
-                    item.setHasPlay(true);
-                    shortVideoAdapter.updateElement(item,pos);
-                   // shortVideoAdapter.removeElement(item);
+                    item.setIsPlay("1");
+                }else{
+                    int[] location = new  int[2];
+                    holder.ivGirl.getLocationOnScreen(location);
+                    Toast toast = Toast.makeText(context, result.msg, Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.TOP, 0, location[1] + 10);
+                    toast.show();
                 }
             }
         });
@@ -204,11 +253,6 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     if(item.getThumb_size() != null){
                         thumbSize = Integer.parseInt(item.getThumb_size());
                     }
-
-                    /*int width = AppKit.getScreenWidth();
-                    int height = width * 9 / 16;
-                    Bitmap bitmap = Bitmap.createBitmap( width, height, Bitmap.Config.ARGB_8888 );
-                    imageView.setImageBitmap(bitmap);*/
 
                     ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
 
@@ -236,6 +280,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         ImageButton playBtn;
         @BindView(R.id.praise_icon)
         ImageButton praiseBtn;
+        @BindView(R.id.praise_text)
+        TextView praiseText;
         @BindView(R.id.enshrine_icon)
         ImageButton enshrineBtn;
         @BindView(R.id.value_icon)

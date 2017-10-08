@@ -1062,7 +1062,7 @@ public class AHttp  implements OnExtIOListerner
 	
 	private boolean openBufFile(){
 		
-		String filePathMd5 = stringToMD5(mOrigUrl);
+		String filePathMd5 = getMd5FromUrl(mOrigUrl);
 		if(filePathMd5 == null){
 			return false;
 		}

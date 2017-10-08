@@ -19,6 +19,7 @@ import java.net.SocketTimeoutException;
 import java.util.HashMap;
 
 import cn.droidlover.xdroid.cache.DiskCache;
+import cn.droidlover.xdroid.demo.adapter.ShortVideoAdapter;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.net.NetApi;
@@ -51,9 +52,12 @@ public class User {
     }
 
     public interface GetPlayUrlCallback{
-        public void onGetPlayUrl(String url);
+        public void onGetPlayUrl(ShortVideoAdapter.GetPlayUrlResult result);
     }
 
+    public interface GetVideoPraiseCallback{
+        public void onGetVideoPraise(String url);
+    }
 
     public static User getInstance(){
         if(user == null){

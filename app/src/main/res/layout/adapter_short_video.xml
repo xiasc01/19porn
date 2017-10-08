@@ -224,7 +224,7 @@
                     android:layout_weight="1" />
 
                 <TextView
-                    android:text="1592"
+                    android:text=""
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/praise_text"

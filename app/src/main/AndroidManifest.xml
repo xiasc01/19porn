@@ -76,7 +76,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.SeriesVideoActivity"></activity>
+        <activity android:name=".ui.SeriesVideoActivity" />
+        <activity android:name=".ui.person.activity.EnshrineActivity" />
+        <activity android:name=".ui.person.activity.PlayHistoryActivity"></activity>
     </application>
 
 </manifest>

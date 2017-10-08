@@ -35,11 +35,14 @@ public class MovieInfo extends BaseModel {
         private String thumb_size;
         private String type;
         private String set_name;
-        private Boolean hasPlay = false;
+        private String  isPlay = "0";
         private String  score;
         private String  pic_score;
         private String  sub_type1;
-        //private
+        private String  isPraise = "0";
+        private String  grade;
+        private String  praise;
+        private String  isEnshrine = "0";
 
         public String getMovie_id(){
             return movie_id;
@@ -152,12 +155,12 @@ public class MovieInfo extends BaseModel {
             this.type = type;
         }
 
-        public Boolean getHasPlay() {
-            return hasPlay;
+        public String getIsPlay() {
+            return isPlay;
         }
 
-        public void setHasPlay(Boolean hasPlay) {
-            this.hasPlay = hasPlay;
+        public void setIsPlay(String isPlay) {
+            this.isPlay = isPlay;
         }
 
         public String getId() {
@@ -198,6 +201,38 @@ public class MovieInfo extends BaseModel {
 
         public void setSub_type1(String sub_type1) {
             this.sub_type1 = sub_type1;
+        }
+
+        public String getIsPraise() {
+            return isPraise;
+        }
+
+        public void setIsPraise(String praise) {
+            isPraise = praise;
+        }
+
+        public String getPraise() {
+            return praise;
+        }
+
+        public void setPraise(String praise) {
+            this.praise = praise;
+        }
+
+        public String getGrade() {
+            return grade;
+        }
+
+        public void setGrade(String grade) {
+            this.grade = grade;
+        }
+
+        public String getIsEnshrine() {
+            return isEnshrine;
+        }
+
+        public void setIsEnshrine(String isEnshrine) {
+            this.isEnshrine = isEnshrine;
         }
     }
 }

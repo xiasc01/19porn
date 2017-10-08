@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.droidlover.xdroid.demo.adapter.ShortVideoAdapter;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.kit.ThumbLoad;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
@@ -184,6 +185,32 @@ public class VideoManager extends Thread {
         }
     }
 
+    public void getEnShrineVideos(final JsonCallback<MovieInfo> callback){
+        MovieInfo movieInfo = new MovieInfo();
+        List<MovieInfo.Item> movies = new ArrayList<MovieInfo.Item>();
+        movieInfo.setResults(movies);
+        for (Map.Entry<String, MovieInfo.Item> entry : mMovies.entrySet()){
+            MovieInfo.Item item = entry.getValue();
+            if(item.getIsEnshrine().equals("1")){
+                movies.add(item);
+            }
+        }
+        callback.onResponse(movieInfo,0);
+    }
+
+    public void getHasPlayVideos(final JsonCallback<MovieInfo> callback){
+        MovieInfo movieInfo = new MovieInfo();
+        List<MovieInfo.Item> movies = new ArrayList<MovieInfo.Item>();
+        movieInfo.setResults(movies);
+        for (Map.Entry<String, MovieInfo.Item> entry : mMovies.entrySet()){
+            MovieInfo.Item item = entry.getValue();
+            if(item.getIsPlay().equals("1")){
+                movies.add(item);
+            }
+        }
+        callback.onResponse(movieInfo,0);
+    }
+
     public void modifyMovieInfo(String movieId, Map<String,String> modifyMovieInfos){
         Log.i(App.TAG,"modifyMovieInfo enter");
         HashMap<String, String> params = new HashMap<String, String>();
@@ -220,10 +247,49 @@ public class VideoManager extends Thread {
         NetApi.invokeGet(params,null);
     }
 
-    public boolean getPlayUrl(final String movieId, final User.GetPlayUrlCallback callback){
+    public boolean getVideoPraise(final String movieId, final User.GetVideoPraiseCallback callback){
         StringCallback stringCallback = new StringCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(String response, int id) {
+                callback.onGetVideoPraise(response);
+            }
+        };
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","fetch_video_praise");
+        params.put("movie_id",movieId);
+        NetApi.invokeGet(params,stringCallback);
+        return true;
+    }
+
+    public boolean addVideoPraise(final String movieId){
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","add_video_praise");
+        params.put("movie_id",movieId);
+        NetApi.invokeGet(params,null);
+
+        Map<String,String> mapMovieInfos = new HashMap<String,String>();
+        mapMovieInfos.put("isPraise","1");
+        mDbManager.update(movieId,mapMovieInfos);
+        return true;
+    }
+
+    public boolean setIsEnshrine(final String movieId){
+        Map<String,String> mapMovieInfos = new HashMap<String,String>();
+        mapMovieInfos.put("isEnshrine","1");
+        mDbManager.update(movieId,mapMovieInfos);
+        return true;
+    }
+
+    public boolean getPlayUrl(final String movieId, final User.GetPlayUrlCallback callback){
+        final JsonCallback<ShortVideoAdapter.GetPlayUrlResult>  localCallback =new JsonCallback<ShortVideoAdapter.GetPlayUrlResult>() {
+            @Override
+            public void onFail(Call call, Exception e, int id) {
                 e.printStackTrace();
 
                 boolean isSocketTimeoutException = e instanceof SocketTimeoutException;
@@ -243,8 +309,13 @@ public class VideoManager extends Thread {
             }
 
             @Override
-            public void onResponse(String response, int id) {
+            public void onResponse(ShortVideoAdapter.GetPlayUrlResult response, int id) {
                 callback.onGetPlayUrl(response);
+                if(response.state){
+                    Map<String,String> mapMovieInfos = new HashMap<String,String>();
+                    mapMovieInfos.put("isPlay","1");
+                    mDbManager.update(movieId,mapMovieInfos);
+                }
             }
         };
 
@@ -260,7 +331,7 @@ public class VideoManager extends Thread {
             params.put("isPay","false");
         }
 
-        NetApi.invokeGet(params,stringCallback);
+        NetApi.invokeGet(params,localCallback);
         return true;
     }
 
@@ -411,7 +482,7 @@ public class VideoManager extends Thread {
         NetApi.invokeGet(params,localCallback);
     }
 
-    private boolean hasCache(String movieId){
+    public boolean hasCache(String movieId){
         String cachePathName = AppKit.getMediaCachePath() + "/" + movieId + ".data";
         File file = new File(cachePathName);
         return file.exists();
@@ -438,7 +509,7 @@ public class VideoManager extends Thread {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS video_info" +
-                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR)");
+                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR,grade int,isPraise int,isEnshrine int,isPlay int)");
         }
 
         //如果DATABASE_VERSION值被改为2,系统发现现有数据库版本不同,即会调用onUpgrade
@@ -464,8 +535,8 @@ public class VideoManager extends Thread {
                 for (MovieInfo.Item movie : movies) {
                     Cursor c = queryMovie(movie.getMovie_id());
                     if(c.getCount() == 0){
-                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key()});
+                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key(),movie.getGrade(),movie.getIsPraise(),movie.getIsEnshrine(),movie.getIsPlay()});
                         results.add(movie);
                     }
                 }
@@ -481,25 +552,6 @@ public class VideoManager extends Thread {
         }
 
         public void update(String movieId, Map<String,String> modifyMovieInfos){
-            /*String sql = "update video_info set ";
-            int i = 0;
-            Object[] arg = new Object[modifyMovieInfos.size() + 1];
-            for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
-                Log.i(App.TAG,"modifyMovieInfo Key = " + entry.getKey() + ", Value = " + entry.getValue());
-                //params.put(entry.getKey(),entry.getValue());
-                if(i != 0){
-                    sql = sql + ",";
-                }
-                sql = sql + entry.getKey() + " = ?";
-                arg[i] = entry.getValue();
-                i++;
-            }
-            sql = sql + " where movieid = ?";
-            arg[i] = movieId;
-            db.beginTransaction();
-            db.execSQL(sql,arg);
-            db.setTransactionSuccessful();
-            db.endTransaction();*/
             ContentValues cv = new ContentValues();
             for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
                 cv.put(entry.getKey(), entry.getValue());
@@ -529,6 +581,10 @@ public class VideoManager extends Thread {
                 movie.setScore(c.getString(c.getColumnIndex("score")));
                 movie.setPic_score(c.getString(c.getColumnIndex("pic_score")));
                 movie.setSub_type1(c.getString(c.getColumnIndex("sub_type1")));
+                movie.setGrade(c.getString(c.getColumnIndex("grade")));
+                movie.setIsPraise(c.getString(c.getColumnIndex("isPraise")));
+                movie.setIsEnshrine(c.getString(c.getColumnIndex("isEnshrine")));
+                movie.setIsPlay(c.getString(c.getColumnIndex("isPlay")));
                 movies.add(movie);
             }
             c.close();
