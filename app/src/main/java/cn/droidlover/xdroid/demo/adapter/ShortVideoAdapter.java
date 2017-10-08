@@ -102,7 +102,7 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.playBtn.setVisibility(View.VISIBLE);
             holder.valueIcon.setVisibility(View.VISIBLE);
             holder.value.setText(item.getValue());
-
+            holder.value.setTextColor(0xff000000);
             if(item.getMovie_id() == null || item.getThumb_key() == null){
                 Log.e(App.TAG,"onBindViewHolder movie is null");
                 return;
@@ -133,9 +133,9 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.subType.setVisibility(View.GONE);
             holder.splitLine1.setVisibility(View.GONE);
         }
+        holder.praiseText.setText(item.getPraise());
 
-
-        if(item.getHasPlay()){
+        if(VideoManager.getInstance().hasCache(item.getMovie_id())){
             holder.title.setTextColor(Color.argb(250,200, 200, 200));
             holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
         }
@@ -244,6 +244,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         ImageButton playBtn;
         @BindView(R.id.praise_icon)
         ImageButton praiseBtn;
+        @BindView(R.id.praise_text)
+        TextView praiseText;
         @BindView(R.id.enshrine_icon)
         ImageButton enshrineBtn;
         @BindView(R.id.value_icon)

@@ -20,4 +20,5 @@
     <color name="white">#ffffff</color>
     <color name="blue">#50419de4</color>
     <color name="gray">#aaaaaa</color>
+    <color name="video_adapter_text">#ff000000</color>
 </resources>

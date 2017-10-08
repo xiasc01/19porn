@@ -411,7 +411,7 @@ public class VideoManager extends Thread {
         NetApi.invokeGet(params,localCallback);
     }
 
-    private boolean hasCache(String movieId){
+    public boolean hasCache(String movieId){
         String cachePathName = AppKit.getMediaCachePath() + "/" + movieId + ".data";
         File file = new File(cachePathName);
         return file.exists();
@@ -438,7 +438,7 @@ public class VideoManager extends Thread {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS video_info" +
-                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR)");
+                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR,praise int,grade int)");
         }
 
         //如果DATABASE_VERSION值被改为2,系统发现现有数据库版本不同,即会调用onUpgrade
@@ -464,8 +464,8 @@ public class VideoManager extends Thread {
                 for (MovieInfo.Item movie : movies) {
                     Cursor c = queryMovie(movie.getMovie_id());
                     if(c.getCount() == 0){
-                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key()});
+                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key(),movie.getPraise(),movie.getGrade()});
                         results.add(movie);
                     }
                 }
@@ -481,25 +481,6 @@ public class VideoManager extends Thread {
         }
 
         public void update(String movieId, Map<String,String> modifyMovieInfos){
-            /*String sql = "update video_info set ";
-            int i = 0;
-            Object[] arg = new Object[modifyMovieInfos.size() + 1];
-            for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
-                Log.i(App.TAG,"modifyMovieInfo Key = " + entry.getKey() + ", Value = " + entry.getValue());
-                //params.put(entry.getKey(),entry.getValue());
-                if(i != 0){
-                    sql = sql + ",";
-                }
-                sql = sql + entry.getKey() + " = ?";
-                arg[i] = entry.getValue();
-                i++;
-            }
-            sql = sql + " where movieid = ?";
-            arg[i] = movieId;
-            db.beginTransaction();
-            db.execSQL(sql,arg);
-            db.setTransactionSuccessful();
-            db.endTransaction();*/
             ContentValues cv = new ContentValues();
             for (Map.Entry<String, String> entry : modifyMovieInfos.entrySet()) {
                 cv.put(entry.getKey(), entry.getValue());
@@ -529,6 +510,8 @@ public class VideoManager extends Thread {
                 movie.setScore(c.getString(c.getColumnIndex("score")));
                 movie.setPic_score(c.getString(c.getColumnIndex("pic_score")));
                 movie.setSub_type1(c.getString(c.getColumnIndex("sub_type1")));
+                movie.setGrade(c.getString(c.getColumnIndex("grade")));
+                movie.setPraise(c.getString(c.getColumnIndex("praise")));
                 movies.add(movie);
             }
             c.close();

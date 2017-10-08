@@ -39,6 +39,8 @@ public class MovieInfo extends BaseModel {
         private String  score;
         private String  pic_score;
         private String  sub_type1;
+        private String  praise;
+        private String  grade;
         //private
 
         public String getMovie_id(){
@@ -198,6 +200,22 @@ public class MovieInfo extends BaseModel {
 
         public void setSub_type1(String sub_type1) {
             this.sub_type1 = sub_type1;
+        }
+
+        public String getPraise() {
+            return praise;
+        }
+
+        public void setPraise(String praise) {
+            this.praise = praise;
+        }
+
+        public String getGrade() {
+            return grade;
+        }
+
+        public void setGrade(String grade) {
+            this.grade = grade;
         }
     }
 }

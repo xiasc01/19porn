@@ -149,12 +149,14 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/label_sub_type"
                     android:textStyle="normal|bold"
+                    android:textColor="@color/video_adapter_text"
                     android:textSize="12sp" />
 
                 <TextView
                     android:text=" | "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/video_adapter_text"
                     android:id="@+id/detail_info_split_line1" />
 
                 <TextView
@@ -163,12 +165,14 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/label_pic_score"
                     android:textStyle="normal|bold"
+                    android:textColor="@color/video_adapter_text"
                     android:textSize="12sp" />
 
                 <TextView
                     android:text=" | "
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/video_adapter_text"
                     android:id="@+id/detail_info_split_line2" />
 
                 <TextView
@@ -177,6 +181,7 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/label_content_score"
                     android:textStyle="normal|bold"
+                    android:textColor="@color/video_adapter_text"
                     android:textSize="12sp" />
 
             </LinearLayout>
@@ -203,6 +208,9 @@
                     android:layout_height="wrap_content"
                     android:id="@+id/value_text"
                     android:layout_weight="1"
+                    android:textStyle="normal|bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/video_adapter_text"
                     android:layout_gravity="center" />
 
             </LinearLayout>
@@ -224,11 +232,14 @@
                     android:layout_weight="1" />
 
                 <TextView
-                    android:text="1592"
+                    android:text=""
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/praise_text"
+                    android:textStyle="normal|bold"
+                    android:textColor="@color/video_adapter_text"
                     android:layout_gravity="center"
+                    android:textSize="12sp"
                     android:layout_weight="1" />
             </LinearLayout>
 
