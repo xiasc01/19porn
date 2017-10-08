@@ -30,8 +30,10 @@ import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.PersonItem;
 import cn.droidlover.xdroid.demo.ui.person.activity.AccountActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.ChargeActivity;
+import cn.droidlover.xdroid.demo.ui.person.activity.EnshrineActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.InvitationActivity;
 import cn.droidlover.xdroid.demo.ui.person.activity.PersonInfoActivity;
+import cn.droidlover.xdroid.demo.ui.person.activity.PlayHistoryActivity;
 import okhttp3.Call;
 
 import static android.net.wifi.SupplicantState.COMPLETED;
@@ -237,6 +239,14 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
 
         if(v.getId() == R.id.account){
             intent = new Intent((Activity)context, AccountActivity.class);
+        }
+
+        if(v.getId() == R.id.enshrine){
+            intent = new Intent((Activity)context, EnshrineActivity.class);
+        }
+
+        if(v.getId() == R.id.play_history){
+            intent = new Intent((Activity)context, PlayHistoryActivity.class);
         }
 
         if(intent != null){
