@@ -3,10 +3,12 @@ package cn.droidlover.xdroid.demo.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
@@ -219,9 +221,46 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
     private void startPlay(final MovieInfo.Item item,final ViewHolder holder){
         final Intent intent = new Intent((Activity)context, PlayerActivity.class);
 
+        String strPlayNoticeCnt = PreferenceManager.getDefaultSharedPreferences(App.getContext()).getString("playNoticeCnt",null);
+        int playNoticeCnt = 0;
+        if(strPlayNoticeCnt != null){
+            playNoticeCnt = Integer.parseInt(strPlayNoticeCnt);
+        }
+
+
+        if(playNoticeCnt < 5 && item.getIsPlay().equals("0")){
+            playNoticeCnt++;
+            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(App.getContext()).edit();
+            editor.putString("playNoticeCnt",playNoticeCnt + "");
+            editor.commit();
+
+            String msg = "";
+            String strCoin = User.getInstance().getCoin(null);
+            if(strCoin != null){
+                msg = "您的账户有" + strCoin +  "个钻石，";
+            }
+            String videoValue = item.getValue();
+            msg += "本次播放将消耗"+ videoValue + "个钻石，";
+
+            int[] location = new  int[2];
+            holder.ivGirl.getLocationOnScreen(location);
+            Toast toast = Toast.makeText(context, msg, Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.TOP, 0, location[1] + 10);
+            toast.show();
+        }
+
+
         VideoManager.getInstance().getPlayUrl(item.getMovie_id(), new User.GetPlayUrlCallback() {
             @Override
             public void onGetPlayUrl(GetPlayUrlResult result) {
+               if(result.msg != null && result.msg.length() > 0){
+                   int[] location = new  int[2];
+                   holder.ivGirl.getLocationOnScreen(location);
+                   Toast toast = Toast.makeText(context, result.msg, Toast.LENGTH_LONG);
+                   toast.setGravity(Gravity.TOP, 0, location[1] + 10);
+                   toast.show();
+               }
+
                 if(result.state){
                     holder.title.setTextColor(Color.argb(250,200, 200, 200));
                     holder.valueIcon.setImageResource(R.mipmap.pay_diamond_disable);
@@ -232,12 +271,6 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     context.startActivity(intent);
 
                     item.setIsPlay("1");
-                }else{
-                    int[] location = new  int[2];
-                    holder.ivGirl.getLocationOnScreen(location);
-                    Toast toast = Toast.makeText(context, result.msg, Toast.LENGTH_LONG);
-                    toast.setGravity(Gravity.TOP, 0, location[1] + 10);
-                    toast.show();
                 }
             }
         });

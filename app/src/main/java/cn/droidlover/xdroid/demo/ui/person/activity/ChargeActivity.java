@@ -73,7 +73,6 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
 
     class Charge{
         public List<ChargeItem> chargeItems = new ArrayList<ChargeItem>();
-        String payAccount;
     }
 
     class ChargeNotice{
@@ -321,20 +320,6 @@ public class ChargeActivity extends XActivity implements View.OnClickListener {
                 if(!response.state){
                     chargeNotice.setTextColor(0xFFC93437);
                 }
-
-                /*if(response.indexOf("支付失败") != -1){
-                    chargeNotice.setText(response);
-                }else{
-                    String text   = "充值成功! 订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                    chargeNotice.setText(text);
-
-
-                    String notice = "      您有一笔交易未支付，订单号" + response + " 请尽快向支付宝" + mCharge.payAccount + "转账"+ amount +" 并备注订单号，若一定时间没有收到您的费用，将停止您对该app的使用";
-                    mNotice2.setText(notice);
-                }
-
-                inputDialog.show();
-                showProgress(false);*/
             }
         };
 
