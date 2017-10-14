@@ -22,6 +22,7 @@ import android.widget.RadioGroup;
 import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
+import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.kit.AppKit;
 import cn.droidlover.xdroid.demo.ui.person.PersonFragment;
@@ -48,6 +49,8 @@ public class MainActivity2 extends XActivity {
 
     @Override
     public void initData(Bundle savedInstanceState) {
+        User user = User.getInstance();
+
         AppKit.mainActivity = this;
 
         fragmentManager = getSupportFragmentManager();
