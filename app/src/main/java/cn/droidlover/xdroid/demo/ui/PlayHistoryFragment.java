@@ -76,11 +76,13 @@ public class PlayHistoryFragment  extends XFragment {
             @Override
             public void onRefresh() {
                 //VideoManager.getInstance().getSeriesVideos(mSeriesName,maxId,mCallback);
+                getAdapter().notifyDataSetChanged();
             }
 
             @Override
             public void onLoadMore(int page) {
                 //VideoManager.getInstance().getSeriesVideos(mSeriesName,maxId,mCallback);
+                getAdapter().notifyDataSetChanged();
             }
         });
 
@@ -96,7 +98,7 @@ public class PlayHistoryFragment  extends XFragment {
     public SimpleRecAdapter getAdapter() {
         if (mAdapter == null) {
             mAdapter = new ShortVideoAdapter(context);
-            //((ShortVideoAdapter)mAdapter).setIsSeriesVideoAdapter(true);
+            ((ShortVideoAdapter)mAdapter).setIsSeriesVideoAdapter(true);
             mAdapter.setRecItemClick(new RecyclerItemCallback<MovieInfo.Item, ShortVideoAdapter.ViewHolder>() {
                 @Override
                 public void onItemClick(int position, MovieInfo.Item model, int tag, ShortVideoAdapter.ViewHolder holder) {

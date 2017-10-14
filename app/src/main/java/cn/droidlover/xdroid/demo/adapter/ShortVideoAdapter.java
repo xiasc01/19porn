@@ -3,15 +3,12 @@ package cn.droidlover.xdroid.demo.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -190,10 +187,14 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
 
         holder.enshrineBtn.setOnClickListener(new ImageButton.OnClickListener(){
             public void onClick(View v) {
-                ((ImageButton)v).setImageResource(R.mipmap.a6e);
                 if(item.getIsEnshrine().equals("0")){
-                    VideoManager.getInstance().setIsEnshrine(item.getMovie_id());
+                    VideoManager.getInstance().setEnshrine(item.getMovie_id(),"1");
+                    ((ImageButton)v).setImageResource(R.mipmap.a6e);
                     item.setIsEnshrine("1");
+                }else{
+                    VideoManager.getInstance().setEnshrine(item.getMovie_id(),"0");
+                    ((ImageButton)v).setImageResource(R.mipmap.a6d);
+                    item.setIsEnshrine("0");
                 }
             }
         });

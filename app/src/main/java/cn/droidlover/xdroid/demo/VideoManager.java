@@ -279,9 +279,9 @@ public class VideoManager extends Thread {
         return true;
     }
 
-    public boolean setIsEnshrine(final String movieId){
+    public boolean setEnshrine(final String movieId,String isEnshrine){
         Map<String,String> mapMovieInfos = new HashMap<String,String>();
-        mapMovieInfos.put("isEnshrine","1");
+        mapMovieInfos.put("isEnshrine",isEnshrine);
         mDbManager.update(movieId,mapMovieInfos);
         return true;
     }

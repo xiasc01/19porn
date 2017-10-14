@@ -128,6 +128,7 @@ public class PlayerActivity extends Activity {
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HW_DECODER_USE, "1");
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "1");
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_AHTTP_CACHE_DIR,intent.getStringExtra(VIDEO_CACHE_PATH));
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.NET_BUFFER_LEAVE,"100");
 		mSurView = (SurfaceView)findViewById(R.id.player_surface);
 
 		mPlayPauseButton = (ImageButton)findViewById(R.id.play_pause);
