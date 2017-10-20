@@ -283,6 +283,14 @@ public class VideoManager extends Thread {
         Map<String,String> mapMovieInfos = new HashMap<String,String>();
         mapMovieInfos.put("isEnshrine",isEnshrine);
         mDbManager.update(movieId,mapMovieInfos);
+
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","set_enshrine_video");
+        params.put("movie_id",movieId);
+        params.put("user_id",User.getInstance().getUserId());
+        params.put("enshrine",isEnshrine);
+        NetApi.invokeGet(params,null);
         return true;
     }
 
