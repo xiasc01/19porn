@@ -97,6 +97,7 @@ public class HomeFragment extends XFragment {
     }
 
     private void initChannel(){
+        Log.i(App.TAG,"init Channel start");
         if(fragmentList.size() == 0){
             HashMap<String, String> params = new HashMap<String, String>();
             params.put("request_type","fetch_channel");
@@ -109,6 +110,7 @@ public class HomeFragment extends XFragment {
     JsonCallback<Channel> callback = new JsonCallback<Channel>() {
         @Override
         public void onFail(Call call, Exception e, int id) {
+            Log.e(App.TAG,"Channel onFail");
             e.printStackTrace();
 
             boolean isSocketTimeoutException = e instanceof SocketTimeoutException;
@@ -128,6 +130,7 @@ public class HomeFragment extends XFragment {
 
         @Override
         public void onResponse(Channel response, int id) {
+            Log.i(App.TAG,"onResponse Channel");
             titles  = new String[response.channels.length];
             for(int i = 0;i < response.channels.length;i++){
                 titles[i] = response.channels[i].channelName;

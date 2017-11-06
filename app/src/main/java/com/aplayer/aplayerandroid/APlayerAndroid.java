@@ -595,6 +595,8 @@ public class APlayerAndroid {
 		{
 			case CONFIGID.AUTO_PLAY:
 				return config_get_auto_play();
+			case CONFIGID.DOWN_SPEED:
+				return config_get_down_speed();
 			case CONFIGID.SUBTITLE_SHOW:
 				return config_get_subtitle_show();
 			case CONFIGID.SUBTITLE_FILE_NAME:
@@ -705,6 +707,13 @@ public class APlayerAndroid {
 	private int  config_set_auto_play(String value){
 		mIsAutoPlay = (value.equalsIgnoreCase("1"));
 		return 1;
+	}
+
+	private String config_get_down_speed(){
+		if(mAHttp != null){
+			return mAHttp.getSpeed() + "";
+		}
+		return 0 + "";
 	}
 
 	private String  config_get_auto_play(){
@@ -1436,6 +1445,7 @@ public class APlayerAndroid {
 		public static final int UPDATEWINDOW        	= 40;		
 		public static final int ORIENTATION   			= 41;
 		public static final int PLAY_SPEED              = 104;
+		public static final int DOWN_SPEED              = 105;
 		public static final int ASPECT_RATIO_NATIVE     = 203;
 		public static final int ASPECT_RATIO_CUSTOM     = 204;
 		
