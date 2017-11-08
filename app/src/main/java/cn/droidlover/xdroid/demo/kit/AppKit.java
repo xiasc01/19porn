@@ -11,15 +11,21 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -227,6 +233,62 @@ public class AppKit {
             return conn.getInputStream();
         }
         return null;
+    }
+
+    public static String getPackageSource(){
+        String filePath = getPackagePath(App.getContext());
+        if(filePath != null){
+            Log.i(App.TAG,"getPackageSource filePath = "  + filePath);
+        }
+        String comment = readApk(new File(filePath));
+        try {
+            comment = URLDecoder.decode(comment,"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return comment;
+    }
+
+    private static String getPackagePath(Context context){
+        if(context != null){
+            return context.getPackageCodePath();
+        }
+        return null;
+    }
+
+    private static String readApk(File file){
+        byte[] bytes = null;
+
+        try {
+            RandomAccessFile accessFile = new RandomAccessFile(file,"r");
+            long index = accessFile.length();
+
+            bytes = new byte[2];
+            index = index - bytes.length;
+            accessFile.seek(index);
+            accessFile.readFully(bytes);
+
+            int contentLength = stream2Short(bytes,0);
+
+            bytes = new byte[contentLength];
+            index = index -bytes.length;
+            accessFile.seek(index);
+            accessFile.readFully(bytes);
+
+            return new String(bytes,"utf-8");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static short stream2Short(byte[] stream, int offset) {
+        ByteBuffer buffer = ByteBuffer.allocate(2);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put(stream[offset]);
+        buffer.put(stream[offset + 1]);
+        return buffer.getShort(0);
     }
 
 }
