@@ -37,7 +37,7 @@ import okio.Buffer;
 
 public class AppKit {
 
-    private static String serverUrl = "http://l.dahaiwenhua.com";
+    private static String serverUrl = "http://www.zjjamy.cn";
 
     public static MainActivity2 mainActivity = null;
 
@@ -153,7 +153,7 @@ public class AppKit {
     }
 
     public static boolean updateServerUrl(){
-        serverUrl = "http://l.dahaiwenhua.com";
+        serverUrl = "http://www.zjjamy.cn";
         return true;
     }
 
