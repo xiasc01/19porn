@@ -5,10 +5,12 @@ package cn.droidlover.xdroid.demo.ui;
  */
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -18,6 +20,16 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.zip.ZipFile;
 
 import cn.droidlover.xdroid.base.XActivity;
 import cn.droidlover.xdroid.demo.App;
@@ -61,6 +73,13 @@ public class MainActivity2 extends XActivity {
         homeFragment = new HomeFragment();
         transaction.replace(R.id.content, homeFragment);
         transaction.commit();
+
+          /*transaction = fragmentManager.beginTransaction();
+        if(personFragment == null){
+            personFragment = new PersonFragment();
+        }
+        transaction.replace(R.id.content, personFragment);
+        transaction.commit();*/
 
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override

@@ -46,7 +46,6 @@ public class User {
     private static User user = null;
     private int    mReConnectNum = 0;
 
-
     public interface LoginCallback{
         public void onLogin(String status);
     }
@@ -470,6 +469,14 @@ public class User {
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("request_type","user_register");
         params.put("device_id",deviceId);
+
+        String apkSource = "";
+        apkSource = AppKit.getPackageSource();
+        if(apkSource == null || apkSource.length() == 0){
+            apkSource = "someOne";
+        }
+
+        params.put("apk_source",apkSource);
         params.put("signature",signature);
 
         NetApi.invokeGet(params,callback);

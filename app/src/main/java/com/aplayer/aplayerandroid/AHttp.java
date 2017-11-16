@@ -17,7 +17,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +29,7 @@ import com.aplayer.aplayerandroid.APlayerAndroid.OnExtIOListerner;
 import android.os.Build;
 import android.os.Environment;
 
+import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.kit.DES;
 import cn.droidlover.xdroid.demo.kit.MyBase64;
 
@@ -452,6 +455,11 @@ public class AHttp  implements OnExtIOListerner
 	}
 
 	private class InterHttp extends  Thread{
+		private class DataPoint {
+			public long time = 0;
+			public int size = 0;
+		}
+
 		private boolean mReading = true;
 		private InputStream         mInputStream      = null;
 		private HttpURLConnection   mHttpConnection   = null;
@@ -465,7 +473,7 @@ public class AHttp  implements OnExtIOListerner
 		private long                mSeekHttpPos   	  = -1;
 		private boolean             mIsHttpOpen       = false;
 		private Object              mLockObject       = new Object();
-
+		private Queue<DataPoint> 	mDataPoints       = new LinkedList<DataPoint>();
 
 		public InterHttp(){
 			mBuffer = new byte[BUFFERSIZE];
@@ -477,52 +485,74 @@ public class AHttp  implements OnExtIOListerner
 			int status  = 0;
 			while (mReading && errorCnt < 5)
 			{
-				if(mSeekHttpPos != -1){
-					Log.i(TAG,"InterHttp:: seek http pos = " + mSeekHttpPos);
-					if(!closeHttpFile() || !openHttpFile(mUrlPath,mSeekHttpPos)){
-						errorCnt++;
-						Log.e(TAG,"InterHttp:: closeHttpFile or openHttpFile is fail");
-						try { Thread.sleep(1000); } catch (Exception e) {}
-						continue;
-					}
-					Log.i(TAG,"InterHttp:: seek over");
-					synchronized (mLockObject){
+				if(status == 0) {
+					errorCnt = 0;
+					//try { Thread.sleep(0, 100);} catch (Exception e) {}
+				}else if(status == 1){
+					try { Thread.sleep(20);} catch (Exception e) {}
+				}else if(status == 2){
+					//mSeekHttpPos = mStartPos;
+				}else if(status == 3){
+					try { Thread.sleep(20); } catch (Exception e) {}
+				}else if(status == 4){
+					try { Thread.sleep(10 * 1000); } catch (Exception e) {}
+				}
+
+				synchronized (mLockObject){
+					if(mSeekHttpPos != -1){
+						Log.i(TAG,"InterHttp:: seek http pos = " + mSeekHttpPos);
+						if(!closeHttpFile() || !openHttpFile(mUrlPath,mSeekHttpPos)){
+							errorCnt++;
+							status = 4;
+							Log.e(TAG,"InterHttp:: closeHttpFile or openHttpFile is fail");
+							continue;
+						}
 						mStartPos = mSeekHttpPos;
 						mCurrentSize = 0;
+						mSeekHttpPos = -1;
+						Log.i(TAG,"InterHttp:: seek over");
 					}
-					mSeekHttpPos = -1;
-				}
 
-				if(mInputStream == null){
-					long pos = (mSeekHttpPos == -1) ? 0 : mSeekHttpPos;
-					if(!openHttpFile(mUrlPath,pos)){
-						errorCnt++;
-						Log.e(TAG,"InterHttp:: openHttpFile is fail");
-						try { Thread.sleep(1000); } catch (Exception e) {}
-						continue;
-					}
-					synchronized (mLockObject){
+					if(mInputStream == null){
+						long pos = (mSeekHttpPos == -1) ? 0 : mSeekHttpPos;
+						if(!openHttpFile(mUrlPath,pos)){
+							errorCnt++;
+							status = 4;
+							Log.e(TAG,"InterHttp:: openHttpFile is fail");
+							continue;
+						}
 						mStartPos = pos;
 						mCurrentSize = 0;
+						mSeekHttpPos = -1;
 					}
-					mSeekHttpPos = -1;
-				}
 
-				if(mInputStream != null){
-					synchronized (mLockObject){
+					if(mInputStream != null){
 						int leftSize =  BUFFERSIZE - mCurrentSize;
+						long streamLeftSize = getFileSize() - (mStartPos + mCurrentSize);
 						int readByte = (HTTPREADSIZE < leftSize) ? HTTPREADSIZE : leftSize;
+						readByte = (int)((readByte > streamLeftSize) ? streamLeftSize : readByte);
 						status = 0;
 						try {
 							if(readByte > 0){
 								Log.i(TAG,"InterHttp::  mCurrentSize = " + mCurrentSize + " readByte = " + readByte);
+								DataPoint datePoint = new DataPoint();
+								datePoint.time = System.currentTimeMillis();
 								readByte = mInputStream.read(mBuffer,mCurrentSize,readByte);
+								datePoint.size = readByte;
+
+								if(mDataPoints.size() > 10000){
+									mDataPoints.poll();
+								}
+
+								mDataPoints.add(datePoint);
+
 								if(readByte == 0){
 									status = 1;
 								}
 								if(readByte == -1){
 									Log.e(TAG,"InterHttp:: http readByte == -1");
 									status = 2;
+									mSeekHttpPos = mStartPos;
 								}
 							}else{
 								status = 1;
@@ -531,27 +561,16 @@ public class AHttp  implements OnExtIOListerner
 							Log.e(TAG,"InterHttp:: http read is fail");
 							e.printStackTrace();
 							status = 2;
+							mSeekHttpPos = mStartPos;
 							readByte = 0;
 						}
 
 						if(readByte > 0){
 							mCurrentSize += readByte;
 						}
+					}else{
+						status = 3;
 					}
-
-					if(status == 0) {
-						errorCnt = 0;
-						//try { Thread.sleep(0, 1000);} catch (Exception e) {}
-					}else if(status == 1){
-						try { Thread.sleep(100);} catch (Exception e) {}
-					}else if(status == 2){
-						//try { Thread.sleep(10 * 1000);} catch (Exception e) {}
-						mSeekHttpPos = mStartPos;
-						//errorCnt++;
-					}
-
-				}else{
-					try { Thread.sleep(20); } catch (Exception e) {}
 				}
 			}
 			mReading = false;
@@ -587,13 +606,17 @@ public class AHttp  implements OnExtIOListerner
 					if(mCurrentSize > 0){
 						if(pos < mStartPos ){
 							mSeekHttpPos = pos;
+							mCurrentSize = 0;
+							mStartPos = mSeekHttpPos;
 							Log.i(TAG,"InterHttp:: pos < mStartPos pos = " + pos + " mStartPos = " + mStartPos);
 						}else{
 							long offset    = pos - mStartPos;
 							long validSize = mCurrentSize - offset;
 							if(validSize <= 0){
-								if(offset >= BUFFERSIZE){
+								if(offset >= BUFFERSIZE || (pos - (mStartPos + mCurrentSize)) > 1 * 1024 * 1024){
 									mSeekHttpPos = pos;
+									mCurrentSize = 0;
+									mStartPos = mSeekHttpPos;
 									Log.i(TAG,"InterHttp:: offset > BUFFERSIZE");
 								}
 							}else{
@@ -644,6 +667,34 @@ public class AHttp  implements OnExtIOListerner
 			}
 			return  0;
 		}
+
+		public int  getSpeed(){
+			synchronized (mLockObject){
+				long curTime = System.currentTimeMillis();
+				long timeInterval = 0;
+				while (!mDataPoints.isEmpty()){
+					DataPoint datePoint = mDataPoints.peek();
+					if(datePoint == null) break;
+
+					timeInterval = curTime - datePoint.time;
+					if(timeInterval > 1000){
+						mDataPoints.poll();
+					}else{
+						break;
+					}
+				}
+
+				long size = 0;
+				for (DataPoint dataPoint : mDataPoints) {
+					size += dataPoint.size;
+				}
+
+				if(timeInterval == 0) return 0;
+
+				return  (int)(size * 1000/ timeInterval);
+			}
+		}
+
 
 		private boolean openHttpFile(String urlPath,long pos){
 			URL url = null;
@@ -735,15 +786,14 @@ public class AHttp  implements OnExtIOListerner
 		String decryptKey = getKeyFromUrl(mOrigUrl);
 		if(decryptKey != null){
 			mDecryptKey = MyBase64.decode(decryptKey.getBytes());
-			if(mDecryptKey != null){
-				mUseDES 	= true;
+			if(mDecryptKey == null){
+				mUseDES 	= false;
 			}
 		}
 
 		if(mUseDES){
 			mDes = new DES();
 			mDes.setKey(mDecryptKey);
-			//native_dec_set_key(mDecryptKey, mObjid);
 		}
 
 		mUrlPath  = getReallyUrl(mOrigUrl);
@@ -752,6 +802,7 @@ public class AHttp  implements OnExtIOListerner
 		}
 
 		if(!openBufFile()){
+			Log.e(App.TAG,"openBufFile fail");
 			return -1;
 		}
 		
@@ -957,7 +1008,15 @@ public class AHttp  implements OnExtIOListerner
 		
 		return true;
 	}
-	
+
+	public int getSpeed(){
+		if(mInterHttp != null){
+			return mInterHttp.getSpeed();
+		}
+		return 0;
+	}
+
+
 	private void init(){
 		mUrlPath          = null;
 		mCurPos           = 0;
@@ -966,6 +1025,8 @@ public class AHttp  implements OnExtIOListerner
 		mInterHttp        = new InterHttp();
 		mCurCacheFileName = "";
 		mUseCache         = true;
+		mUseDES 		  = true;
+		mInterHttpStart   = false;
 	}
 	
 	private long getFileSize(){
@@ -1085,7 +1146,7 @@ public class AHttp  implements OnExtIOListerner
 			return false;
 		}
 		
-		mCacheFileDirManage = new CacheFileDirManage(mCacheFileDir);
+		//mCacheFileDirManage = new CacheFileDirManage(mCacheFileDir);
 		
 		mCurCacheFileName = filePathMd5;
 		
