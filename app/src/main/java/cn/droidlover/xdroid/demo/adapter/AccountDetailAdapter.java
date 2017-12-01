@@ -4,8 +4,15 @@ package cn.droidlover.xdroid.demo.adapter;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.TextView;
 
+import com.aplayer.aplayerandroid.Log;
+
+import butterknife.BindView;
 import cn.droidlover.xdroid.base.SimpleRecAdapter;
+import cn.droidlover.xdroid.demo.AccountManager;
+import cn.droidlover.xdroid.demo.App;
+import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.kit.KnifeKit;
 
@@ -13,27 +20,50 @@ import cn.droidlover.xdroid.kit.KnifeKit;
  * Created by lzmlsfe on 2017/10/9.
  */
 
-public class AccountDetailAdapter  extends SimpleRecAdapter<MovieInfo.Item, AccountDetailAdapter.ViewHolder> {
+public class AccountDetailAdapter  extends SimpleRecAdapter<AccountManager.ChargeItem, AccountDetailAdapter.ViewHolder> {
 
     public  AccountDetailAdapter(Context context){
         super(context);
     }
     @Override
     public ViewHolder newViewHolder(View itemView) {
-        return null;
+        return new ViewHolder(itemView);
     }
 
     @Override
     public int getLayoutId() {
-        return 0;
+        return R.layout.adapter_account;
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-
+        final  AccountManager.ChargeItem item = data.get(position);
+        Log.i(App.TAG,"Account onBindViewHolder time = " + item.mTime);
+        if(item != null){
+            holder.accountTimeYmd.setText(item.mTime.substring(0,10));
+            holder.accountTimeHms.setText(item.mTime.substring(10));
+            holder.accountOrderId.setText(item.mOderId);
+            holder.accountCoin.setText(item.mCoin);
+            holder.accountUnPayAmount.setText(item.mUnPayAmount);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @BindView(R.id.account_time_ymd_text)
+        TextView accountTimeYmd;
+
+        @BindView(R.id.account_time_hms_text)
+        TextView accountTimeHms;
+
+        @BindView(R.id.account_orderId_text)
+        TextView accountOrderId;
+
+        @BindView(R.id.account_coin_text)
+        TextView accountCoin;
+
+        @BindView(R.id.account_unpay_amount_text)
+        TextView accountUnPayAmount;
+
         public ViewHolder(View itemView) {
             super(itemView);
             KnifeKit.bind(this, itemView);

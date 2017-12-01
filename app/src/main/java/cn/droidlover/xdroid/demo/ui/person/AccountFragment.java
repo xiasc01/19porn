@@ -38,6 +38,7 @@ public class AccountFragment extends XFragment {
 
         for (int i = 0;i < 3;i++){
             Fragment fragment = new AccountDetailFragment();
+            ((AccountDetailFragment)fragment).setType(i);
             fragmentList.add(fragment);
         }
 
