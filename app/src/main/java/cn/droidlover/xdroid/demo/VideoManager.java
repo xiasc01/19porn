@@ -13,7 +13,11 @@ import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.io.File;
 import java.net.SocketTimeoutException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +40,7 @@ public class VideoManager extends Thread {
     private User      mUser                                 =  null;
     private int       mReConnectNum                         =  0;
     private Map<String,MovieInfo.Item>  mMovies             = new HashMap<String,MovieInfo.Item>();
-    private Map<String,List<MovieInfo.Item> > mMovieSeries = new HashMap<String,List<MovieInfo.Item>>();
+    private Map<String,List<MovieInfo.Item> > mMovieSeries  = new HashMap<String,List<MovieInfo.Item>>();
     private Map<String ,List<MovieInfo.Item> > mTypeMovies  = new HashMap<String,List<MovieInfo.Item> >();
     private Map<String,ImageView>  mThumbImageView          = new HashMap<String,ImageView>();
 
@@ -161,15 +165,16 @@ public class VideoManager extends Thread {
         }
     }
 
-    public void getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
+    public boolean getVideos(final int videoType, int id, final JsonCallback<MovieInfo> callback){
         if(id == -1){
             /*if(!getVideosFromLocal(videoType,callback)){
                 getVideosFromServer(videoType,10,callback);
             }*/
-            getVideosFromLocal(videoType,callback);
+          return  getVideosFromLocal(videoType,callback);
         }else {
             getVideosFromServer(videoType,null,id,callback);
         }
+        return true;
     }
 
     public void getSeriesVideos(String seriesName,int startId,final JsonCallback<MovieInfo> callback){
@@ -185,6 +190,14 @@ public class VideoManager extends Thread {
         }
     }
 
+    public static final class ComparatorEnShrineTimeMovieItem implements Comparator<MovieInfo.Item> {
+        @Override
+        public int compare(MovieInfo.Item object1, MovieInfo.Item object2) {
+            return object1.getEnshrineTime().compareTo(object2.getEnshrineTime());
+        }
+
+    }
+
     public void getEnShrineVideos(final JsonCallback<MovieInfo> callback){
         MovieInfo movieInfo = new MovieInfo();
         List<MovieInfo.Item> movies = new ArrayList<MovieInfo.Item>();
@@ -195,7 +208,17 @@ public class VideoManager extends Thread {
                 movies.add(item);
             }
         }
+
+        Collections.sort(movies,new ComparatorEnShrineTimeMovieItem());
         callback.onResponse(movieInfo,0);
+    }
+
+    public static final class ComparatorPlayTimeMovieItem implements Comparator<MovieInfo.Item> {
+        @Override
+        public int compare(MovieInfo.Item object1, MovieInfo.Item object2) {
+            return object1.getPlayTime().compareTo(object2.getPlayTime());
+        }
+
     }
 
     public void getHasPlayVideos(final JsonCallback<MovieInfo> callback){
@@ -208,6 +231,8 @@ public class VideoManager extends Thread {
                 movies.add(item);
             }
         }
+
+        Collections.sort(movies, new ComparatorPlayTimeMovieItem());
         callback.onResponse(movieInfo,0);
     }
 
@@ -282,6 +307,10 @@ public class VideoManager extends Thread {
     public boolean setEnshrine(final String movieId,String isEnshrine){
         Map<String,String> mapMovieInfos = new HashMap<String,String>();
         mapMovieInfos.put("isEnshrine",isEnshrine);
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+        String t = format.format(new Date());
+        mapMovieInfos.put("enshrineTime",t);
         mDbManager.update(movieId,mapMovieInfos);
 
 
@@ -322,6 +351,9 @@ public class VideoManager extends Thread {
                 if(response.state){
                     Map<String,String> mapMovieInfos = new HashMap<String,String>();
                     mapMovieInfos.put("isPlay","1");
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+                    String t = format.format(new Date());
+                    mapMovieInfos.put("playTime",t);
                     mDbManager.update(movieId,mapMovieInfos);
                 }
             }
@@ -517,7 +549,7 @@ public class VideoManager extends Thread {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS video_info" +
-                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR,grade int,isPraise int,isEnshrine int,isPlay int)");
+                    "(id mediumint PRIMARY KEY,movie_id VARCHAR, title VARCHAR,score tinyint,pic_score tinyint,sub_type1 VARCHAR,type VARCHAR,duration VARCHAR, value VARCHAR, set_name VARCHAR,thumb_path VARCHAR,thumb_pos bigint,thumb_size int,thumb_key VARCHAR,grade int,isPraise int,isEnshrine int,isPlay int,enshrineTime VARCHAR,playTime VARCHAR)");
         }
 
         //如果DATABASE_VERSION值被改为2,系统发现现有数据库版本不同,即会调用onUpgrade
@@ -537,14 +569,15 @@ public class VideoManager extends Thread {
         }
 
         public List<MovieInfo.Item> add(List<MovieInfo.Item> movies) {
+            Log.i(App.TAG,"add movie size = " + movies.size());
             List<MovieInfo.Item> results = new ArrayList<MovieInfo.Item>();
             db.beginTransaction();  //开始事务
             try {
                 for (MovieInfo.Item movie : movies) {
                     Cursor c = queryMovie(movie.getMovie_id());
                     if(c.getCount() == 0){
-                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key(),movie.getGrade(),movie.getIsPraise(),movie.getIsEnshrine(),movie.getIsPlay()});
+                        db.execSQL("INSERT INTO video_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                new Object[]{Integer.parseInt(movie.getId()), movie.getMovie_id(), movie.getTitle(),movie.getScore(),movie.getPic_score(),movie.getSub_type1(),movie.getType(), movie.getDuration(),movie.getValue(),movie.getSet_name(),movie.getThumb_url(),movie.getThumb_pos(),movie.getThumb_size(),movie.getThumb_key(),movie.getGrade(),movie.getIsPraise(),movie.getIsEnshrine(),movie.getIsPlay(),movie.getEnshrineTime(),movie.getPlayTime()});
                         results.add(movie);
                     }
                 }
@@ -593,6 +626,8 @@ public class VideoManager extends Thread {
                 movie.setIsPraise(c.getString(c.getColumnIndex("isPraise")));
                 movie.setIsEnshrine(c.getString(c.getColumnIndex("isEnshrine")));
                 movie.setIsPlay(c.getString(c.getColumnIndex("isPlay")));
+                movie.setPlayTime(c.getString(c.getColumnIndex("playTime")));
+                movie.setEnshrineTime(c.getString(c.getColumnIndex("enshrineTime")));
                 movies.add(movie);
             }
             c.close();

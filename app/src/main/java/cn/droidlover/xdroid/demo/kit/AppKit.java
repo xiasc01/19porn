@@ -187,8 +187,8 @@ public class AppKit {
         WindowManager manager = (WindowManager) App.getContext().getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics outMetrics = new DisplayMetrics();
         manager.getDefaultDisplay().getMetrics(outMetrics);
-        int width = outMetrics.heightPixels;
-        return  width;
+        int height = outMetrics.heightPixels;
+        return  height;
     }
 
     public static String getCurrentTime(){

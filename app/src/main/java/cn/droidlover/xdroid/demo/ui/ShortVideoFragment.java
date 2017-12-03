@@ -88,8 +88,9 @@ public class ShortVideoFragment extends XFragment{
         if(!mIsInit){
             mIsInit = true;
             initAdapter();
-            VideoManager.getInstance().getVideos(mType,-1,mCallback);
-            VideoManager.getInstance().getVideos(mType,maxId,mCallback);
+            if(!VideoManager.getInstance().getVideos(mType,-1,mCallback)){
+                VideoManager.getInstance().getVideos(mType,maxId,mCallback);
+            }
         }
     }
 

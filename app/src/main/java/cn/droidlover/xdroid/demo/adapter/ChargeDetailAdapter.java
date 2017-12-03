@@ -1,3 +1,4 @@
+//AccountDetailAdapter
 package cn.droidlover.xdroid.demo.adapter;
 
 import android.content.Context;
@@ -15,17 +16,17 @@ import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.kit.KnifeKit;
 
 /**
- * Created by Administrator on 2017/12/1 0001.
+ * Created by lzmlsfe on 2017/10/9.
  */
 
-public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.AccountItem, AccountDetailAdapter.ViewHolder> {
+public class ChargeDetailAdapter extends SimpleRecAdapter<AccountManager.ChargeItem, ChargeDetailAdapter.ViewHolder> {
 
-    public AccountDetailAdapter(Context context){
+    public ChargeDetailAdapter(Context context){
         super(context);
     }
     @Override
-    public AccountDetailAdapter.ViewHolder newViewHolder(View itemView) {
-        return new AccountDetailAdapter.ViewHolder(itemView);
+    public ViewHolder newViewHolder(View itemView) {
+        return new ViewHolder(itemView);
     }
 
     @Override
@@ -34,15 +35,15 @@ public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.Accoun
     }
 
     @Override
-    public void onBindViewHolder(AccountDetailAdapter.ViewHolder holder, int position) {
-        final  AccountManager.AccountItem item = data.get(position);
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        final  AccountManager.ChargeItem item = data.get(position);
         Log.i(App.TAG,"Account onBindViewHolder time = " + item.mTime);
         if(item != null){
-            /*holder.accountTimeYmd.setText(item.mTime.substring(0,10));
+            holder.accountTimeYmd.setText(item.mTime.substring(0,10));
             holder.accountTimeHms.setText(item.mTime.substring(11));
             holder.accountOrderId.setText(item.mOderId);
             holder.accountCoin.setText(item.mCoin);
-            holder.accountUnPayAmount.setText(item.mUnPayAmount);*/
+            holder.accountUnPayAmount.setText(item.mUnPayAmount + "");
         }
     }
 

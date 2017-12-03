@@ -15,17 +15,16 @@ import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.kit.KnifeKit;
 
 /**
- * Created by Administrator on 2017/12/1 0001.
+ * Created by Administrator on 2017/12/3 0003.
  */
 
-public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.AccountItem, AccountDetailAdapter.ViewHolder> {
-
-    public AccountDetailAdapter(Context context){
+public class AwardDetailAdapter  extends SimpleRecAdapter<AccountManager.InvitationItem, AwardDetailAdapter.ViewHolder> {
+    public AwardDetailAdapter(Context context){
         super(context);
     }
     @Override
-    public AccountDetailAdapter.ViewHolder newViewHolder(View itemView) {
-        return new AccountDetailAdapter.ViewHolder(itemView);
+    public AwardDetailAdapter.ViewHolder newViewHolder(View itemView) {
+        return new AwardDetailAdapter.ViewHolder(itemView);
     }
 
     @Override
@@ -34,8 +33,8 @@ public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.Accoun
     }
 
     @Override
-    public void onBindViewHolder(AccountDetailAdapter.ViewHolder holder, int position) {
-        final  AccountManager.AccountItem item = data.get(position);
+    public void onBindViewHolder(AwardDetailAdapter.ViewHolder holder, int position) {
+        final  AccountManager.InvitationItem item = data.get(position);
         Log.i(App.TAG,"Account onBindViewHolder time = " + item.mTime);
         if(item != null){
             /*holder.accountTimeYmd.setText(item.mTime.substring(0,10));

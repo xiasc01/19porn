@@ -465,7 +465,7 @@ public class AHttp  implements OnExtIOListerner
 		private HttpURLConnection   mHttpConnection   = null;
 		private String              mUrlPath          = null;
 		private byte[]              mBuffer           = null;
-		private static  final  int  BUFFERSIZE       = 4 * 1024 * 1024;
+		private static  final  int  BUFFERSIZE       = 6 * 1024 * 1024;
 		private static  final  int  HTTPREADSIZE     = 64 * 1024;
 		private ReentrantLock       mLock 			  = new ReentrantLock();
 		private long                mStartPos         = 0;
@@ -645,7 +645,7 @@ public class AHttp  implements OnExtIOListerner
 					return  readByte;
 				}
 
-				try { Thread.sleep(100); } catch (Exception e) {}
+				try { Thread.sleep(10); } catch (Exception e) {}
 			}
 		}
 
@@ -901,7 +901,9 @@ public class AHttp  implements OnExtIOListerner
 		if(readByte > 0){
 			int desReadByte = readByte;
 			if(mUseDES){
+				Log.i(App.TAG,"desDecrypt s");
 				desReadByte = desDecrypt(tempBuf, desPos, readByte);
+				Log.i(App.TAG,"desDecrypt e");
 			}
 
 
@@ -1279,7 +1281,13 @@ public class AHttp  implements OnExtIOListerner
 					break;
 				}
 
-				if(posEnd - pos  < mHeadEncrySize){
+				/*if(posEnd - pos  < mHeadEncrySize){
+					decryptSize = (posEnd - pos) / 8 * 8;
+				}else{
+					decryptSize = mHeadEncrySize - pos;
+				}*/
+
+				if(posEnd  < mHeadEncrySize){
 					decryptSize = (posEnd - pos) / 8 * 8;
 				}else{
 					decryptSize = mHeadEncrySize - pos;
@@ -1315,7 +1323,9 @@ public class AHttp  implements OnExtIOListerner
 					byte[] in 	= new byte[(int)decryptSize];
 					byte[] out  = new byte[(int)decryptSize];
 					System.arraycopy(data,(int)(pos -streamPos),in,0,(int)decryptSize);
+					Log.i(App.TAG,"inter decrypt s");
 					mDes.decrypt(in,out);
+					Log.i(App.TAG,"inter decrypt e");
 					System.arraycopy(out,0,data,(int)(pos -streamPos),(int)decryptSize);
 
 					pos += decryptSize;

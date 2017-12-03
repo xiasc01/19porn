@@ -110,7 +110,7 @@ public class PlayerActivity extends Activity {
 		Log.i(DEBUG_TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
 		// 全屏模式下显示状态栏
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
@@ -129,6 +129,7 @@ public class PlayerActivity extends Activity {
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_USER_AHTTP, "1");
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.HTTP_AHTTP_CACHE_DIR,intent.getStringExtra(VIDEO_CACHE_PATH));
 		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.NET_BUFFER_LEAVE,"100");
+		mAPlayerAndroid.setConfig(APlayerAndroid.CONFIGID.NET_BUFFER_ENTER,"500");
 		mSurView = (SurfaceView)findViewById(R.id.player_surface);
 
 		mPlayPauseButton = (ImageButton)findViewById(R.id.play_pause);
@@ -187,33 +188,39 @@ public class PlayerActivity extends Activity {
 				showProgress(false);
 				int videoWidth  = mAPlayerAndroid.getVideoWidth();
 				int videoHeight = mAPlayerAndroid.getVideoHeight();
-
-				Log.d(DEBUG_TAG, "onOpenSuccess video_width = " + videoWidth + " video_height = " + videoHeight);
+				Log.i(DEBUG_TAG, "onOpenSuccess video_width = " + videoWidth + " video_height = " + videoHeight);
 				int screenWidth  = AppKit.getScreenWidth();
 				int screenHeight = AppKit.getScreenHeight();
+
 				int l = 0;
 				int t = 0;
-				int w  = screenHeight;
-				int h =  screenWidth;
+				int w  = 0;
+				int h =  0;
 				if(videoWidth >= videoHeight){
 					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-					if((videoWidth * 1.0f) / (videoHeight * 1.0f) > (screenHeight* 1.0f / screenWidth * 1.0f)){
+					int landscapeScreenWidth  = screenHeight;
+					int landscapeScreenHeight = screenWidth;
+					w = landscapeScreenWidth;
+					h = landscapeScreenHeight;
+					if((videoWidth * 1.0f) / (videoHeight * 1.0f) > (landscapeScreenWidth* 1.0f / landscapeScreenHeight * 1.0f)){
 						h = videoHeight * w / videoWidth;
-						t = (screenWidth - h) / 2;
+						t = (landscapeScreenHeight - h) / 2;
 					}else{
 						w  = videoWidth * h / videoHeight;
-						l  = (screenHeight - w) / 2;
+						l  = (landscapeScreenWidth - w) / 2;
 					}
 				}else{
 					playerActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
-					w = screenWidth;
-					h = screenHeight;
-					if((videoHeight * 1.0f) / (videoWidth * 1.0f) > (screenWidth* 1.0f / screenHeight * 1.0f)){
+					int portraitScreenWidth  = screenWidth;
+					int portraitScreenHeight = screenHeight;
+					w = portraitScreenWidth;
+					h = portraitScreenHeight;
+					if((videoHeight * 1.0f) / (videoWidth * 1.0f) > (portraitScreenHeight* 1.0f / portraitScreenWidth * 1.0f)){
 						w  = videoWidth * h / videoHeight;
-						l  = (screenWidth - w) / 2;
+						l  = (portraitScreenWidth - w) / 2;
 					}else{
 						h = videoHeight * w / videoWidth;
-						t = (screenHeight - h) / 2;
+						t = (portraitScreenHeight - h) / 2;
 					}
 				}
 
@@ -340,7 +347,7 @@ public class PlayerActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		Log.v(DEBUG_TAG, "onDestory");
+		Log.i("APlayerAndroid", "onDestory");
 		super.onDestroy();
 		mAPlayerAndroid.close();
 		mAPlayerAndroid.setOnOpenSuccessListener(null);

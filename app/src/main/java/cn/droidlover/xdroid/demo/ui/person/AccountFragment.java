@@ -46,7 +46,7 @@ public class AccountFragment extends XFragment {
             adapter = new XFragmentAdapter(activity.getSupportFragmentManager(), fragmentList, titles);
         }
 
-        viewPager.setOffscreenPageLimit(3);
+        viewPager.setOffscreenPageLimit(1);
         viewPager.setAdapter(adapter);
 
         tabLayout.setupWithViewPager(viewPager);
