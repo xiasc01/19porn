@@ -18,7 +18,7 @@ import cn.droidlover.xdroid.kit.KnifeKit;
  * Created by Administrator on 2017/12/3 0003.
  */
 
-public class AwardDetailAdapter  extends SimpleRecAdapter<AccountManager.InvitationItem, AwardDetailAdapter.ViewHolder> {
+public class AwardDetailAdapter  extends SimpleRecAdapter<AccountManager.AwardItem, AwardDetailAdapter.ViewHolder> {
     public AwardDetailAdapter(Context context){
         super(context);
     }
@@ -29,37 +29,33 @@ public class AwardDetailAdapter  extends SimpleRecAdapter<AccountManager.Invitat
 
     @Override
     public int getLayoutId() {
-        return R.layout.adapter_charge;
+        return R.layout.adapter_award;
     }
 
     @Override
     public void onBindViewHolder(AwardDetailAdapter.ViewHolder holder, int position) {
-        final  AccountManager.InvitationItem item = data.get(position);
+        final  AccountManager.AwardItem item = data.get(position);
         Log.i(App.TAG,"Account onBindViewHolder time = " + item.mTime);
         if(item != null){
-            /*holder.accountTimeYmd.setText(item.mTime.substring(0,10));
-            holder.accountTimeHms.setText(item.mTime.substring(11));
-            holder.accountOrderId.setText(item.mOderId);
-            holder.accountCoin.setText(item.mCoin);
-            holder.accountUnPayAmount.setText(item.mUnPayAmount);*/
+            holder.awardTimeYmd.setText(item.mTime.substring(0,10));
+            holder.awardTimeHms.setText(item.mTime.substring(11));
+            holder.awardCoin.setText(item.mCoin + "");
+            holder.awardType.setText(item.mType);
         }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.account_time_ymd_text)
-        TextView accountTimeYmd;
+        @BindView(R.id.award_time_ymd_text)
+        TextView awardTimeYmd;
 
-        @BindView(R.id.account_time_hms_text)
-        TextView accountTimeHms;
+        @BindView(R.id.award_time_hms_text)
+        TextView awardTimeHms;
 
-        @BindView(R.id.account_orderId_text)
-        TextView accountOrderId;
+        @BindView(R.id.award_coin_text)
+        TextView awardCoin;
 
-        @BindView(R.id.account_coin_text)
-        TextView accountCoin;
-
-        @BindView(R.id.account_unpay_amount_text)
-        TextView accountUnPayAmount;
+        @BindView(R.id.award_type_text)
+        TextView awardType;
 
         public ViewHolder(View itemView) {
             super(itemView);

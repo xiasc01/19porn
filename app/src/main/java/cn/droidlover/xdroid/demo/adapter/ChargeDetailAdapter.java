@@ -42,25 +42,25 @@ public class ChargeDetailAdapter extends SimpleRecAdapter<AccountManager.ChargeI
             holder.accountTimeYmd.setText(item.mTime.substring(0,10));
             holder.accountTimeHms.setText(item.mTime.substring(11));
             holder.accountOrderId.setText(item.mOderId);
-            holder.accountCoin.setText(item.mCoin);
+            holder.accountCoin.setText(item.mCoin + "");
             holder.accountUnPayAmount.setText(item.mUnPayAmount + "");
         }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.account_time_ymd_text)
+        @BindView(R.id.charge_time_ymd_text)
         TextView accountTimeYmd;
 
-        @BindView(R.id.account_time_hms_text)
+        @BindView(R.id.charge_time_hms_text)
         TextView accountTimeHms;
 
-        @BindView(R.id.account_orderId_text)
+        @BindView(R.id.charge_orderId_text)
         TextView accountOrderId;
 
-        @BindView(R.id.account_coin_text)
+        @BindView(R.id.charge_coin_text)
         TextView accountCoin;
 
-        @BindView(R.id.account_unpay_amount_text)
+        @BindView(R.id.charge_unpay_amount_text)
         TextView accountUnPayAmount;
 
         public ViewHolder(View itemView) {

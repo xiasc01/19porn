@@ -53,6 +53,7 @@ public class AccountDetailFragment extends XFragment {
 
             Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + chargeItems.size());
 
+            getAdapter().clearData();
             for(int i = 0;i < chargeItems.size();i++){
                 AccountManager.ChargeItem chargeItem = chargeItems.get(i);
                 getAdapter().addElement(0,chargeItem);
@@ -77,50 +78,52 @@ public class AccountDetailFragment extends XFragment {
         public void onResponse(AccountManager.AccountDetail response, int id) {
             if(response.isError) return;
 
-            /*List<AccountManager.ChargeItem> chargeItems = response.chargeItems;
+            List<AccountManager.AccountItem> accountItems = response.accountItems;
 
 
-            Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + chargeItems.size());
+            Log.i(App.TAG,"AccountDetailFragment accountItemSize = " + accountItems.size());
 
-            for(int i = 0;i < chargeItems.size();i++){
-                AccountManager.ChargeItem chargeItem = chargeItems.get(i);
-                getAdapter().addElement(0,chargeItem);
+            getAdapter().clearData();
+            for(int i = 0;i < accountItems.size();i++){
+                AccountManager.AccountItem accountItem = accountItems.get(i);
+                getAdapter().addElement(0,accountItem);
             }
 
-            if(chargeItems.size() > 0){
-                getAdapter().notifyItemRangeInserted(0, chargeItems.size());
+            if(accountItems.size() > 0){
+                getAdapter().notifyItemRangeInserted(0, accountItems.size());
             }
 
-            getAdapter().notifyDataSetChanged();*/
+            getAdapter().notifyDataSetChanged();
 
         }
     };
 
-    private JsonCallback<AccountManager.InvitationDetail> mAwardCallback =   new JsonCallback<AccountManager.InvitationDetail>() {
+    private JsonCallback<AccountManager.AwardDetail> mAwardCallback =   new JsonCallback<AccountManager.AwardDetail>() {
         @Override
         public void onFail(Call call, Exception e, int id) {
             contentLayout.setDisplayState(QTContentLayout.STATE_ERROR);
         }
 
         @Override
-        public void onResponse(AccountManager.InvitationDetail response, int id) {
+        public void onResponse(AccountManager.AwardDetail response, int id) {
             if(response.isError) return;
 
-            /*List<AccountManager.ChargeItem> chargeItems = response.chargeItems;
+            List<AccountManager.AwardItem> awardItems = response.awardItems;
 
 
-            Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + chargeItems.size());
+            Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + awardItems.size());
 
-            for(int i = 0;i < chargeItems.size();i++){
-                AccountManager.ChargeItem chargeItem = chargeItems.get(i);
-                getAdapter().addElement(0,chargeItem);
+            getAdapter().clearData();
+            for(int i = 0;i < awardItems.size();i++){
+                AccountManager.AwardItem awardItem = awardItems.get(i);
+                getAdapter().addElement(0,awardItem);
             }
 
-            if(chargeItems.size() > 0){
-                getAdapter().notifyItemRangeInserted(0, chargeItems.size());
+            if(awardItems.size() > 0){
+                getAdapter().notifyItemRangeInserted(0, awardItems.size());
             }
 
-            getAdapter().notifyDataSetChanged();*/
+            getAdapter().notifyDataSetChanged();
 
         }
     };
@@ -138,17 +141,7 @@ public class AccountDetailFragment extends XFragment {
             AccountManager.getChargeDetail(mChargeCallback);
 
         if(mType == 2)
-            AccountManager.getInvitationDetail(mAwardCallback);
-
-        /*recyclerView.setOnRefreshAndLoadMoreListener(new XRecyclerView.OnRefreshAndLoadMoreListener() {
-            @Override
-            public void onRefresh() {
-            }
-
-            @Override
-            public void onLoadMore(int page) {
-            }
-        });*/
+            AccountManager.getAwardDetail(mAwardCallback);
 
         contentLayout.loadingView(View.inflate(getContext(), R.layout.view_loading, null));
         contentLayout.getRecyclerView().useDefLoadMoreView();

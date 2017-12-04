@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import cn.droidlover.xdroid.demo.kit.AppKit;
+import cn.droidlover.xdroid.demo.model.MovieInfo;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xdroid.demo.net.NetApi;
 import okhttp3.Call;
@@ -30,11 +31,23 @@ public class AccountManager {
     }
 
     public class AccountItem{
-        public String mTime;
-        public String mType;
-        public String mName;
-        public int mSpare;
-        public int mCoin;
+        public String mTime = "";
+        public String mType = "";
+        public String mName = "";
+        public int mSpare = 0;
+        public int mCoin = 0;
+    }
+
+    public class AwardItem{
+        public String mTime = "";
+        public String mType = "";
+        public int mCoin = 0;
+    }
+
+    public class AwardItem2{
+        public String mTime = "";
+        public String mType = "";
+        public int mCoin = 0;
     }
 
     public class PlayItem{
@@ -65,6 +78,13 @@ public class AccountManager {
         public List<ChargeItem> chargeItems;
         public List<PlayItem> playItems;
         public List<AccountItem> accountItems;
+    }
+
+    public class AwardDetail{
+        public boolean  isError = true;
+        public List<InvitationItem> invitationItems;
+        public List<AwardItem2> awardItem2s;
+        public List<AwardItem> awardItems;
     }
 
     public static void getInvitationDetail(final JsonCallback<InvitationDetail> callback){
@@ -231,12 +251,17 @@ public class AccountManager {
                             invitationPos++;
                         }
                         if(f == 1){
-                            accountItem.mCoin = response.playItems.get(playPos).mCoin;
-                            spare -= accountItem.mCoin;
+                            accountItem.mCoin = -response.playItems.get(playPos).mCoin;
+                            spare += accountItem.mCoin;
                             accountItem.mSpare = spare;
                             accountItem.mTime = minTime;
                             accountItem.mType = "播放";
-                            accountItem.mName = response.playItems.get(playPos).mMovieId;
+                            String movieId = response.playItems.get(playPos).mMovieId;
+                            MovieInfo.Item movieInfoItem = VideoManager.getInstance().getMovieInfoItem(movieId);
+                            if(movieInfoItem != null){
+                                accountItem.mName = movieInfoItem.getTitle();
+                            }
+
                             playPos++;
                         }
                         if(f == 2){
@@ -258,6 +283,88 @@ public class AccountManager {
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("request_type","fetch_account_info");
+        //params.put("user_id",User.getInstance().getUserId());
+        params.put("user_id","pxme6n");
+
+        NetApi.invokeGet(params,localCallback);
+    }
+
+    public static void getAwardDetail(final JsonCallback<AwardDetail> callback){
+        final JsonCallback<AwardDetail> localCallback =  new JsonCallback<AwardDetail>() {
+            @Override
+            public void onFail(Call call, Exception e, int id) {
+                if(e instanceof SocketTimeoutException && mReConnectNum < 5){
+                    mReConnectNum++;
+                    AppKit.updateServerUrl();
+                    getAwardDetail(callback);
+                }else {
+                    callback.onFail(call,e,id);
+                    mReConnectNum = 0;
+                }
+            }
+
+            @Override
+            public void onResponse(AwardDetail response, int id) {
+                if(response != null && !response.isError){
+                    int size = 0;
+                    if(response.invitationItems != null)
+                        size += response.invitationItems.size();
+                    if(response.awardItem2s != null)
+                        size += response.awardItem2s.size();
+
+                    int awardItem2Pos = 0,invitationPos = 0;
+                    String  invitationTime,award2Time;
+                    response.awardItems = new ArrayList<AwardItem>(size);
+
+                    for (int i = 0;i < size;i++){
+                        int f = 0;
+                        if(response.invitationItems != null && response.invitationItems.size() > invitationPos){
+                            invitationTime = response.invitationItems.get(invitationPos).mTime;
+                        }else{
+                            invitationTime = "9999-99-99 99:99:99";
+                        }
+
+                        if(response.awardItem2s != null && response.awardItem2s.size() > awardItem2Pos){
+                            award2Time       = response.awardItem2s.get(awardItem2Pos).mTime;
+                        }else{
+                            award2Time = "9999-99-99 99:99:99";
+                        }
+
+
+                        String minTime;
+                        if(invitationTime.compareTo(award2Time) < 0){
+                            minTime = invitationTime;
+                            f = 0;
+                        }else{
+                            minTime = award2Time;
+                            f = 1;
+                        }
+
+
+                        AwardItem awardItem = new AccountManager().new AwardItem();
+                        if(f == 0){
+                            awardItem.mCoin = response.invitationItems.get(invitationPos).mCoin;
+                            awardItem.mTime = minTime;
+                            awardItem.mType = "推荐奖励";
+                            invitationPos++;
+                        }
+                        if(f == 1){
+                            awardItem.mCoin = response.awardItem2s.get(awardItem2Pos).mCoin;
+                            awardItem.mTime = minTime;
+                            awardItem.mType = response.awardItem2s.get(awardItem2Pos).mType;
+                            awardItem2Pos++;
+                        }
+                        response.awardItems.add(awardItem);
+                    }
+                    callback.onResponse(response,id);
+                }
+                mReConnectNum = 0;
+            }
+        };
+
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("request_type","fetch_award_info");
         //params.put("user_id",User.getInstance().getUserId());
         params.put("user_id","pxme6n");
 

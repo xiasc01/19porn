@@ -30,7 +30,7 @@ public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.Accoun
 
     @Override
     public int getLayoutId() {
-        return R.layout.adapter_charge;
+        return R.layout.adapter_account;
     }
 
     @Override
@@ -38,29 +38,44 @@ public class AccountDetailAdapter extends SimpleRecAdapter<AccountManager.Accoun
         final  AccountManager.AccountItem item = data.get(position);
         Log.i(App.TAG,"Account onBindViewHolder time = " + item.mTime);
         if(item != null){
-            /*holder.accountTimeYmd.setText(item.mTime.substring(0,10));
+            holder.accountTimeYmd.setText(item.mTime.substring(0,10));
             holder.accountTimeHms.setText(item.mTime.substring(11));
-            holder.accountOrderId.setText(item.mOderId);
-            holder.accountCoin.setText(item.mCoin);
-            holder.accountUnPayAmount.setText(item.mUnPayAmount);*/
+            holder.accountSpare.setText(item.mSpare + "");
+            int coin = item.mCoin;
+            if(coin > 0){
+                holder.accountCoin.setText("+" + item.mCoin);
+            }else{
+                holder.accountCoin.setText(item.mCoin + "");
+            }
+            holder.accountType.setText(item.mType);
+            if(item.mName == null ||item.mName.length() == 0){
+                holder.accountDetail.setVisibility(View.GONE);
+            }else{
+                holder.accountDetail.setText(item.mName);
+                holder.accountDetail.setVisibility(View.VISIBLE);
+            }
+
         }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.account_time_ymd_text)
+        @BindView(R.id.charge_time_ymd_text)
         TextView accountTimeYmd;
 
-        @BindView(R.id.account_time_hms_text)
+        @BindView(R.id.charge_time_hms_text)
         TextView accountTimeHms;
 
-        @BindView(R.id.account_orderId_text)
-        TextView accountOrderId;
+        @BindView(R.id.account_spare_text)
+        TextView accountSpare;
 
         @BindView(R.id.account_coin_text)
         TextView accountCoin;
 
-        @BindView(R.id.account_unpay_amount_text)
-        TextView accountUnPayAmount;
+        @BindView(R.id.account_type_text)
+        TextView accountType;
+
+        @BindView(R.id.account_detail_text)
+        TextView accountDetail;
 
         public ViewHolder(View itemView) {
             super(itemView);

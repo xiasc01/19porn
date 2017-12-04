@@ -18,33 +18,25 @@
             android:layout_marginRight="8dp">
 
             <TextView
-                android:id="@+id/charge_orderId_text"
+                android:id="@+id/award_coin_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text=""
                 android:layout_gravity="left|center_vertical"
                 android:textColor="@color/black"
+                android:textSize="18sp"
                 android:gravity="center_horizontal" />
 
             <TextView
-                android:id="@+id/charge_coin_text"
+                android:id="@+id/award_type_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text=""
                 android:layout_gravity="left|center_vertical"
                 android:textColor="@color/black"
-                android:gravity="center_horizontal" />
-
-            <TextView
-                android:id="@+id/charge_unpay_amount_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text=""
-                android:layout_gravity="left|center_vertical"
-                android:textColor="@color/black"
+                android:textSize="18sp"
                 android:gravity="right" />
 
             <LinearLayout
@@ -56,7 +48,7 @@
                 android:elevation="0dp">
 
                 <TextView
-                    android:id="@+id/charge_time_ymd_text"
+                    android:id="@+id/award_time_ymd_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -65,7 +57,7 @@
                     android:textColor="@color/black" />
 
                 <TextView
-                    android:id="@+id/charge_time_hms_text"
+                    android:id="@+id/award_time_hms_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -75,11 +67,11 @@
 
         </LinearLayout>
 
-    <View
-        android:id="@+id/line"
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="@color/border_clo"
-        android:layout_marginBottom="0dp" />
+        <View
+            android:id="@+id/line"
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/border_clo"
+            android:layout_marginBottom="0dp" />
     </LinearLayout>
 </FrameLayout>
