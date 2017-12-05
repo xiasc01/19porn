@@ -1295,6 +1295,9 @@ public class APlayerAndroid {
 	}
 
     private int postEventFromNative(int what, int arg1, int arg2, Object obj){
+		if(mDestroy){
+			return 0;
+		}
     	Message m = mEventHandler.obtainMessage(what, arg1, arg2, obj);
 		if(m == null){
 			return 0;

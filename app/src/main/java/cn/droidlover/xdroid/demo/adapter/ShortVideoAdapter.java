@@ -18,6 +18,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -126,9 +128,23 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
             holder.title.setText(item.getTitle());
         }
 
-        holder.duration.setText(item.getFormatDuration());
         holder.contentScore.setText("内容 " + item.getScore());
         holder.picScore.setText("画质 " + item.getPic_score());
+
+       /* holder.duration.setText(item.getFormatDuration());
+        if(!item.getScore().equals("0")){
+            holder.contentScore.setText("内容 " + item.getScore());
+        }else{
+            holder.contentScore.setVisibility(View.GONE);
+            holder.splitLine2.setVisibility(View.GONE);
+        }
+
+        if(!item.getPic_score().equals("0")){
+            holder.picScore.setText("画质 " + item.getPic_score());
+        }else{
+            holder.picScore.setVisibility(View.GONE);
+        }*/
+
         if(item.getPraise() != null){
             holder.praiseText.setText(item.getPraise());
         }else{
@@ -194,6 +210,9 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     VideoManager.getInstance().setEnshrine(item.getMovie_id(),"1");
                     ((ImageButton)v).setImageResource(R.mipmap.a6e);
                     item.setIsEnshrine("1");
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+                    String t = format.format(new Date());
+                    item.setEnshrineTime(t);
                 }else{
                     VideoManager.getInstance().setEnshrine(item.getMovie_id(),"0");
                     ((ImageButton)v).setImageResource(R.mipmap.a6d);
@@ -273,6 +292,9 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
                     context.startActivity(intent);
 
                     item.setIsPlay("1");
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
+                    String t = format.format(new Date());
+                    item.setPlayTime(t);
                 }
             }
         });
@@ -283,6 +305,18 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         if(ThumbLoad.getInstance() == null){
             ThumbLoad.getInstance();
         }
+
+        int thumbPos = 0;
+        if(item.getThumb_pos() != null){
+            thumbPos = Integer.parseInt(item.getThumb_pos());
+        }
+
+        int thumbSize = 0;
+        if(item.getThumb_size() != null){
+            thumbSize = Integer.parseInt(item.getThumb_size());
+        }
+
+        //ThumbLoad.getInstance().loadImage(imageView,item.getThumb_url(),thumbPos,thumbSize,item.getThumb_key(),item.getMovie_id());
 
         Thread thread = new Thread(new Runnable() {
             @Override
@@ -342,6 +376,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         TextView subType;
         @BindView(R.id.detail_info_split_line1)
         TextView splitLine1;
+        @BindView(R.id.detail_info_split_line2)
+        TextView splitLine2;
 
 
 

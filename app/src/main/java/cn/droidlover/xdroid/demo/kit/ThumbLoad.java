@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -15,8 +17,11 @@ import android.util.Log;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.squareup.picasso.Downloader;
+import com.squareup.picasso.Picasso;
 import com.zhy.http.okhttp.OkHttpUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,6 +34,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cn.droidlover.xdroid.cache.MemoryCache;
 import cn.droidlover.xdroid.demo.App;
@@ -48,6 +55,7 @@ public class ThumbLoad {
     private static final int headEncrySize = 1024;
     private static final int segmentSize = 4096;
     private String      mThumbCacheDir   = Environment.getExternalStorageDirectory() + "/droid/thumb/";
+    private Picasso     mPicasso;
 
     private Handler handler = new Handler() {
         @Override
@@ -66,7 +74,82 @@ public class ThumbLoad {
         public  String movieId;
     }
 
+    public class PicassoDownloader implements Downloader{
+        private Uri mUri = null;
+
+        @Override
+        public Response load(Uri uri, int networkPolicy) throws IOException {
+            mUri = uri;
+            String movieID = uri.getQueryParameter("md5");
+            String key     = uri.getQueryParameter("key");
+            String url     = "http://" + uri.getHost()  + uri.getPath();
+            int pos        = Integer.parseInt(uri.getQueryParameter("pos"));
+            int size       = Integer.parseInt(uri.getQueryParameter("size"));
+
+            InputStream stream    = null;
+            boolean     fromCache = false;
+
+
+            String thumbName     = movieID + ".thumb";
+            String thumbPathName = mThumbCacheDir + thumbName;
+            File file = new File(thumbPathName);
+
+            while (true){
+                if(file.exists()){
+                    fromCache = true;
+                    try {
+                        stream = new FileInputStream(file);
+                        if(((FileInputStream)stream).getChannel().size() != 0){
+                            break;
+                        }else{
+                            stream = null;
+                        }
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        stream = null;
+                    }
+                }
+
+                fromCache = false;
+                String range = "bytes=" + pos + "-" + (pos + size - 1);
+                HashMap<String,String> header = new HashMap<String,String>();
+                header.put("Range",range);
+
+                okhttp3.Response response = OkHttpUtils.get().url(url)
+                        .params(new HashMap<String, String>())
+                        .headers(header)
+                        .build()
+                        .execute();
+
+                byte[] thumbData = decodeThumb(response,key,size);
+                if(thumbData != null){
+                    try {
+                        FileOutputStream fileOutputStream = new FileOutputStream(file,false);
+                        fileOutputStream.write(thumbData);
+                        fileOutputStream.flush();
+                        fileOutputStream.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    stream = new ByteArrayInputStream(thumbData);
+                }
+                break;
+            }
+            return new Response(stream, fromCache, size);
+        }
+
+        @Override
+        public void shutdown() {
+            //OkHttpUtils.getInstance().cancelTag(mUri);
+        }
+    }
+
+
     private ThumbLoad() {
+        Picasso.Builder picassoBuilder = new Picasso.Builder(App.getContext());
+        picassoBuilder.downloader(new PicassoDownloader());
+        mPicasso = picassoBuilder.build();
     }
 
     public static ThumbLoad getInstance() {
@@ -165,7 +248,7 @@ public class ThumbLoad {
             return null;
         }
 
-        byte[] thumbData = decodeThumb(response,key);
+        byte[] thumbData = decodeThumb(response,key,0);
         if(thumbData != null){
             try {
                 FileOutputStream fileOutputStream = new FileOutputStream(file,false);
@@ -184,13 +267,15 @@ public class ThumbLoad {
 
     public boolean loadImage(final ImageView imageView,final String url,final int pos,final int size,final String key,final String movieID){
         Log.i(App.TAG,"loadImage movie id = " + movieID);
-        if(imageView == null){
-            return false;
-        }
+        if(imageView == null){ return false; }
 
+        //String uri = url + "?&pos=" + pos + "&size=" + size + "&key=" + key + "&md5=" + movieID;
         int width = AppKit.getScreenWidth();
         int height = width * 9 / 16;
         final Bitmap emptyBitmap = Bitmap.createBitmap( width, height, Bitmap.Config.ARGB_8888 );
+
+        //mPicasso.load(uri).resize(width,height).placeholder(new BitmapDrawable(emptyBitmap)).into(imageView);
+        //return true;
 
         if(movieID == null){
             imageView.setImageBitmap(emptyBitmap);
@@ -309,17 +394,71 @@ public class ThumbLoad {
         return true;
     }
 
-    private byte[] decodeThumb(Response response, String key){
+    private byte[] decodeThumb(Response response, String key,int size){
+        DES des = new DES();
+        byte[] keyByte = MyBase64.decode(key.getBytes());
+        InputStream fins = response.body().byteStream();
+
+        if(fins == null || keyByte == null){
+            return null;
+        }
+
+        byte[] buf = new byte[(int)size];
+
+        int totalReadByte = 0;
+        while (totalReadByte < size){
+            try {
+                int readByte = fins.read(buf,totalReadByte,size - totalReadByte);
+                if(readByte == -1){
+                    break;
+                }
+                totalReadByte += readByte;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return  null;
+            }
+        }
+
+
+        des.setKey(keyByte);
+
+        byte[] temp1  = new byte[8];
+        byte[] temp2  = new byte[8];
+        for (int i = 0;i + 8 < size;i += 8){
+            if(i < headEncrySize || (i - headEncrySize) % segmentSize < encryDataSizePerTime){
+                System.arraycopy(buf,i,temp1,0,8);
+                des.decrypt8(temp1,temp2);
+                System.arraycopy(temp2,0,buf,i,8);
+            }
+        }
+
+        try {
+            fins.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            return buf;
+        }
+    }
+
+    private byte[] decodeThumb(InputStream stream,String key,int size){
+        if(stream == null || key == null){
+            return null;
+        }
+
         DES des = new DES();
         byte[] keyByte = MyBase64.decode(key.getBytes());
 
-        InputStream fins = response.body().byteStream();
-        final long size = response.body().contentLength();
-        String keyString = new String(keyByte);
-        byte[] buf = new byte[(int)size];
+        byte[] buf = new byte[size];
 
+        int totalReadByte = 0;
+        while (totalReadByte < size)
         try {
-            fins.read(buf);
+            int readByte = stream.read(buf);
+            if(readByte == -1){
+                break;
+            }
+            totalReadByte += readByte;
         } catch (IOException e) {
             e.printStackTrace();
             return  null;
@@ -338,7 +477,7 @@ public class ThumbLoad {
         }
 
         try {
-            fins.close();
+            stream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
@@ -370,11 +509,18 @@ public class ThumbLoad {
 
         byte[] buf = new byte[size];
 
-        try {
-            fins.read(buf);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return  null;
+        int totalReadByte = 0;
+        while (totalReadByte < size){
+            try {
+                int readByte = fins.read(buf,totalReadByte,size - totalReadByte);
+                if(readByte == -1){
+                    break;
+                }
+                totalReadByte += readByte;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return  null;
+            }
         }
 
         des.setKey(keyByte);

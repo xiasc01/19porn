@@ -43,6 +43,8 @@ public class MovieInfo extends BaseModel {
         private String  grade;
         private String  praise;
         private String  isEnshrine = "0";
+        private String  enshrineTime = "0";
+        private String  playTime = "0";
 
         public String getMovie_id(){
             return movie_id;
@@ -233,6 +235,22 @@ public class MovieInfo extends BaseModel {
 
         public void setIsEnshrine(String isEnshrine) {
             this.isEnshrine = isEnshrine;
+        }
+
+        public String getEnshrineTime() {
+            return enshrineTime;
+        }
+
+        public void setEnshrineTime(String enshrineTime) {
+            this.enshrineTime = enshrineTime;
+        }
+
+        public String getPlayTime() {
+            return playTime;
+        }
+
+        public void setPlayTime(String playTime) {
+            this.playTime = playTime;
         }
     }
 }

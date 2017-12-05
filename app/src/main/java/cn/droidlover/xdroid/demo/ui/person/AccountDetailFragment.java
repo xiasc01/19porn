@@ -14,10 +14,9 @@ import cn.droidlover.xdroid.base.XFragment;
 import cn.droidlover.xdroid.demo.AccountManager;
 import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
-import cn.droidlover.xdroid.demo.VideoManager;
 import cn.droidlover.xdroid.demo.adapter.AccountDetailAdapter;
-import cn.droidlover.xdroid.demo.adapter.ShortVideoAdapter;
-import cn.droidlover.xdroid.demo.model.MovieInfo;
+import cn.droidlover.xdroid.demo.adapter.AwardDetailAdapter;
+import cn.droidlover.xdroid.demo.adapter.ChargeDetailAdapter;
 import cn.droidlover.xdroid.demo.net.JsonCallback;
 import cn.droidlover.xrecyclerview.RecyclerItemCallback;
 import cn.droidlover.xrecyclerview.XRecyclerContentLayout;
@@ -29,7 +28,9 @@ import okhttp3.Call;
  */
 
 public class AccountDetailFragment extends XFragment {
-    AccountDetailAdapter mAdapter;
+    ChargeDetailAdapter  mChargeAdapter;
+    AccountDetailAdapter mAccountAdapter;
+    AwardDetailAdapter   mAwardDetailAdapter;
 
     @BindView(R.id.contentLayout)
     XRecyclerContentLayout contentLayout;
@@ -37,7 +38,7 @@ public class AccountDetailFragment extends XFragment {
     private int mType = 0;
 
 
-    private JsonCallback<AccountManager.ChargeDetail> mCallback =   new JsonCallback<AccountManager.ChargeDetail>() {
+    private JsonCallback<AccountManager.ChargeDetail> mChargeCallback =   new JsonCallback<AccountManager.ChargeDetail>() {
         @Override
         public void onFail(Call call, Exception e, int id) {
             contentLayout.setDisplayState(QTContentLayout.STATE_ERROR);
@@ -52,6 +53,7 @@ public class AccountDetailFragment extends XFragment {
 
             Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + chargeItems.size());
 
+            getAdapter().clearData();
             for(int i = 0;i < chargeItems.size();i++){
                 AccountManager.ChargeItem chargeItem = chargeItems.get(i);
                 getAdapter().addElement(0,chargeItem);
@@ -66,6 +68,65 @@ public class AccountDetailFragment extends XFragment {
         }
     };
 
+    private JsonCallback<AccountManager.AccountDetail> mAccountCallback =   new JsonCallback<AccountManager.AccountDetail>() {
+        @Override
+        public void onFail(Call call, Exception e, int id) {
+            contentLayout.setDisplayState(QTContentLayout.STATE_ERROR);
+        }
+
+        @Override
+        public void onResponse(AccountManager.AccountDetail response, int id) {
+            if(response.isError) return;
+
+            List<AccountManager.AccountItem> accountItems = response.accountItems;
+
+
+            Log.i(App.TAG,"AccountDetailFragment accountItemSize = " + accountItems.size());
+
+            getAdapter().clearData();
+            for(int i = 0;i < accountItems.size();i++){
+                AccountManager.AccountItem accountItem = accountItems.get(i);
+                getAdapter().addElement(0,accountItem);
+            }
+
+            if(accountItems.size() > 0){
+                getAdapter().notifyItemRangeInserted(0, accountItems.size());
+            }
+
+            getAdapter().notifyDataSetChanged();
+
+        }
+    };
+
+    private JsonCallback<AccountManager.AwardDetail> mAwardCallback =   new JsonCallback<AccountManager.AwardDetail>() {
+        @Override
+        public void onFail(Call call, Exception e, int id) {
+            contentLayout.setDisplayState(QTContentLayout.STATE_ERROR);
+        }
+
+        @Override
+        public void onResponse(AccountManager.AwardDetail response, int id) {
+            if(response.isError) return;
+
+            List<AccountManager.AwardItem> awardItems = response.awardItems;
+
+
+            Log.i(App.TAG,"AccountDetailFragment chargeItemSize = " + awardItems.size());
+
+            getAdapter().clearData();
+            for(int i = 0;i < awardItems.size();i++){
+                AccountManager.AwardItem awardItem = awardItems.get(i);
+                getAdapter().addElement(0,awardItem);
+            }
+
+            if(awardItems.size() > 0){
+                getAdapter().notifyItemRangeInserted(0, awardItems.size());
+            }
+
+            getAdapter().notifyDataSetChanged();
+
+        }
+    };
 
     @Override
     public void initData(Bundle savedInstanceState) {
@@ -73,17 +134,14 @@ public class AccountDetailFragment extends XFragment {
         setLayoutManager(recyclerView);
         recyclerView.setAdapter(getAdapter());
 
-        AccountManager.getChargeDetail(mCallback);
+        if(mType == 0)
+            AccountManager.getAccountDetail(mAccountCallback);
 
-        recyclerView.setOnRefreshAndLoadMoreListener(new XRecyclerView.OnRefreshAndLoadMoreListener() {
-            @Override
-            public void onRefresh() {
-            }
+        if(mType == 1)
+            AccountManager.getChargeDetail(mChargeCallback);
 
-            @Override
-            public void onLoadMore(int page) {
-            }
-        });
+        if(mType == 2)
+            AccountManager.getAwardDetail(mAwardCallback);
 
         contentLayout.loadingView(View.inflate(getContext(), R.layout.view_loading, null));
         contentLayout.getRecyclerView().useDefLoadMoreView();
@@ -104,16 +162,34 @@ public class AccountDetailFragment extends XFragment {
     }
 
     public SimpleRecAdapter getAdapter() {
-        if (mAdapter == null) {
-            mAdapter = new AccountDetailAdapter(context);
-            mAdapter.setRecItemClick(new RecyclerItemCallback<AccountManager.ChargeItem, AccountDetailAdapter.ViewHolder>() {
-                @Override
-                public void onItemClick(int position, AccountManager.ChargeItem model, int tag, AccountDetailAdapter.ViewHolder holder) {
-                    super.onItemClick(position, model, tag, holder);
-                }
-            });
+        if (mType == 0) {
+            if(mAccountAdapter == null)
+                mAccountAdapter = new AccountDetailAdapter(context);
+            return mAccountAdapter;
         }
-        return mAdapter;
+
+        if (mType == 1) {
+            if(mChargeAdapter == null){
+                mChargeAdapter = new ChargeDetailAdapter(context);
+                mChargeAdapter.setRecItemClick(new RecyclerItemCallback<AccountManager.ChargeItem, ChargeDetailAdapter.ViewHolder>() {
+                    @Override
+                    public void onItemClick(int position, AccountManager.ChargeItem model, int tag, ChargeDetailAdapter.ViewHolder holder) {
+                        super.onItemClick(position, model, tag, holder);
+                    }
+                });
+            }
+
+            return mChargeAdapter;
+        }
+
+        if (mType == 2) {
+            if(mAwardDetailAdapter == null){
+                mAwardDetailAdapter = new AwardDetailAdapter(context);
+            }
+            return mAwardDetailAdapter;
+        }
+
+        return null;
     }
 
     public void setLayoutManager(XRecyclerView recyclerView) {

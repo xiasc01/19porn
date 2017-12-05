@@ -43,7 +43,7 @@ import okio.Buffer;
 
 public class AppKit {
 
-    private static String serverUrl = "http://l.dahaiwenhua.com";
+    private static String serverUrl = "http://www.zjjamy.cn";
 
     public static MainActivity2 mainActivity = null;
 
@@ -159,7 +159,7 @@ public class AppKit {
     }
 
     public static boolean updateServerUrl(){
-        serverUrl = "http://l.dahaiwenhua.com";
+        serverUrl = "http://www.zjjamy.cn";
         return true;
     }
 
@@ -187,8 +187,8 @@ public class AppKit {
         WindowManager manager = (WindowManager) App.getContext().getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics outMetrics = new DisplayMetrics();
         manager.getDefaultDisplay().getMetrics(outMetrics);
-        int width = outMetrics.heightPixels;
-        return  width;
+        int height = outMetrics.heightPixels;
+        return  height;
     }
 
     public static String getCurrentTime(){
