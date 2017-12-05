@@ -6,3 +6,6 @@
 .DS_Store
 /build
 /captures
+/app/app.iml
+/app/build.gradle
+/library/library.iml
