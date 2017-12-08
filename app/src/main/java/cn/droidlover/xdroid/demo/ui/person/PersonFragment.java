@@ -9,12 +9,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import java.io.InputStream;
@@ -24,6 +24,7 @@ import java.net.URL;
 
 import butterknife.BindView;
 import cn.droidlover.xdroid.base.XFragment;
+import cn.droidlover.xdroid.demo.App;
 import cn.droidlover.xdroid.demo.R;
 import cn.droidlover.xdroid.demo.User;
 import cn.droidlover.xdroid.demo.kit.AppKit;
@@ -117,6 +118,7 @@ public class PersonFragment extends XFragment implements View.OnClickListener{
                 }else{
                     mAccount.setItemValue2(null);
                 }
+                User.getInstance().setUnVerifyCoin(response);
             }
         }
     }

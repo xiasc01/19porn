@@ -277,6 +277,10 @@ public class User {
         mCoin = coin;
     }
 
+    public void setUnVerifyCoin(String coin){
+        mUnVerifyCoin = coin;
+    }
+
     public String getCoin(Callback<String> onCallBack){
         if(onCallBack == null){
             return  mCoin;

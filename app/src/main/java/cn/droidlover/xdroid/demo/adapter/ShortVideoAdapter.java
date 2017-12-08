@@ -131,8 +131,8 @@ public class ShortVideoAdapter extends SimpleRecAdapter<MovieInfo.Item, ShortVid
         holder.contentScore.setText("内容 " + item.getScore());
         holder.picScore.setText("画质 " + item.getPic_score());
 
-       /* holder.duration.setText(item.getFormatDuration());
-        if(!item.getScore().equals("0")){
+        holder.duration.setText(item.getFormatDuration());
+        /*if(!item.getScore().equals("0")){
             holder.contentScore.setText("内容 " + item.getScore());
         }else{
             holder.contentScore.setVisibility(View.GONE);
